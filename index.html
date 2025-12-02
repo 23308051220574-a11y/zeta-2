@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zeta - Navegación Segura</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; overflow: hidden; }
+        
+        #map { height: 100vh; width: 100%; z-index: 0; }
+        
+        .map-3d-mode #map {
+            transform: perspective(1200px) rotateX(45deg) translateY(-10%);
+            transform-origin: center bottom;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .user-marker {
+            width: 50px; height: 50px; border-radius: 50%;
+            border: 4px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            background-size: cover; background-position: center; position: relative;
+        }
+        
+        .user-marker::after {
+            content: ''; position: absolute; bottom: -20px; left: 50%;
+            transform: translateX(-50%); width: 0; height: 0;
+            border-left: 10px solid transparent; border-right: 10px solid transparent;
+            border-top: 20px solid white; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+        
+        .pulse-ring {
+            position: absolute; width: 100%; height: 100%; border-radius: 50%;
+            background: rgba(59, 130, 246, 0.3); animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px); z-index: 5000;
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        .search-box {
+            position: absolute; top: 16px; left: 16px; right: 16px; z-index: 1000;
+            background: white; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            padding: 16px;
+        }
+        
+        .fab {
+            position: absolute; right: 16px; width: 56px; height: 56px;
+            background: white; border-radius: 50%; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            display: flex; align-items: center; justify-content: center; z-index: 1000;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .fab:active { transform: scale(0.9); }
+        .fab-3d { bottom: 90px; }
+        .fab-loc { bottom: 160px; }
+        
+        .bottom-sheet {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: white; border-radius: 24px 24px 0 0;
+            box-shadow: 0 -4px 24px rgba(0,0,0,0.15); z-index: 1001;
+            transform: translateY(100%); transition: transform 0.3s ease-out;
+            max-height: 75vh; overflow-y: auto;
+        }
+        .bottom-sheet.active { transform: translateY(0); }
+        
+        .input-row {
+            display: flex; align-items: center; background: #f3f4f6;
+            border-radius: 12px; padding: 12px; position: relative;
+        }
+        .input-row input {
+            background: transparent; width: 100%; outline: none;
+            font-size: 15px; margin-left: 10px; border: none;
+        }
+        
+        .suggestions-box {
+            position: absolute; top: 100%; left: 0; right: 0;
+            background: white; border-radius: 12px; margin-top: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1); max-height: 240px;
+            overflow-y: auto; z-index: 1002; display: none;
+        }
+        .suggestions-box.show { display: block; }
+        
+        .suggestion-item {
+            padding: 14px; border-bottom: 1px solid #f3f4f6;
+            cursor: pointer; display: flex; align-items: center; gap: 12px;
+            transition: background 0.15s;
+        }
+        .suggestion-item:hover { background: #f9fafb; }
+        
+        .transport-option {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px; border-radius: 12px; border: 2px solid transparent;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .transport-option:hover { background: #f9fafb; }
+        .transport-option.selected { background: #f3f4f6; border-color: #000; }
+        
+        .photo-preview {
+            width: 100px; height: 100px; border-radius: 12px;
+            object-fit: cover; cursor: pointer; border: 2px solid #e5e7eb;
+        }
+        
+        .profile-pic-upload {
+            width: 120px; height: 120px; border-radius: 50%;
+            border: 4px dashed #d1d5db; display: flex;
+            align-items: center; justify-content: center; cursor: pointer;
+            background: #f9fafb; transition: all 0.2s; overflow: hidden;
+        }
+        .profile-pic-upload:hover { border-color: #3b82f6; }
+        .profile-pic-upload img { width: 100%; height: 100%; object-fit: cover; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="map"></div>
+
+    <div id="terms-modal" class="modal-overlay">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-11/12 shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <span class="text-4xl">🛡️</span>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900">Bienvenido a Zeta</h2>
+                <p class="text-gray-600 mt-2">Tu seguridad es nuestra prioridad</p>
+            </div>
+            
+            <div class="bg-gray-50 rounded-2xl p-4 max-h-64 overflow-y-auto mb-6 text-sm">
+                <h3 class="font-bold mb-2">Términos y Condiciones</h3>
+                <p class="text-gray-700 mb-3">Al usar Zeta, aceptas:</p>
+                <ul class="space-y-2 text-gray-600">
+                    <li>✓ Compartir tu ubicación para mejores rutas</li>
+                    <li>✓ Recibir alertas de seguridad en tiempo real</li>
+                    <li>✓ Contribuir con reportes verificados</li>
+                    <li>✓ Uso responsable de la información</li>
+                    <li>✓ Política de privacidad y datos</li>
+                </ul>
+                <p class="mt-4 text-xs text-gray-500">
+                    Zeta utiliza datos de ubicación para calcular rutas seguras. 
+                    Tu información se maneja de forma confidencial según nuestras políticas.
+                </p>
+            </div>
+            
+            <button onclick="acceptTerms()" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all">
+                Aceptar y Continuar
+            </button>
+        </div>
+    </div>
+
+    <div id="register-modal" class="modal-overlay hidden">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-11/12 shadow-2xl">
+            <h2 class="text-2xl font-bold text-center mb-6">Crea tu Cuenta</h2>
+            
+            <div class="flex flex-col items-center mb-6">
+                <label for="profile-pic-input" class="profile-pic-upload">
+                    <div id="profile-preview" class="text-center">
+                        <i data-lucide="camera" class="w-12 h-12 text-gray-400 mx-auto mb-2"></i>
+                        <p class="text-xs text-gray-500">Foto de perfil</p>
+                    </div>
+                </label>
+                <input type="file" id="profile-pic-input" accept="image/*" class="hidden" onchange="previewProfilePic(event)">
+            </div>
+            
+            <input type="text" id="reg-name" placeholder="Nombre completo" class="w-full p-4 border rounded-xl mb-4 focus:ring-2 focus:ring-blue-500 outline-none">
+            <input type="email" id="reg-email" placeholder="Correo electrónico" class="w-full p-4 border rounded-xl mb-6 focus:ring-2 focus:ring-blue-500 outline-none">
+            
+            <button onclick="registerUser()" class="w-full bg-black text-white py-4 rounded-xl font-bold shadow-lg hover:bg-gray-800 transition-all mb-3">
+                Registrarse
+            </button>
+            <button onclick="skipRegistration()" class="w-full text-gray-500 py-3 text-sm">
+                Continuar sin cuenta
+            </button>
+        </div>
+    </div>
+
+    <div id="report-modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[3000] backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-2xl w-11/12 max-w-md shadow-2xl">
+            <h3 class="text-xl font-bold mb-4">Reportar Incidente</h3>
+            
+            <textarea id="report-desc" class="w-full p-3 border rounded-xl text-sm mb-3" rows="3" placeholder="Describe lo que sucede (mínimo 10 caracteres)..."></textarea>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Adjuntar foto (opcional)</label>
+                <input type="file" id="report-photo" accept="image/*" class="w-full text-sm" onchange="previewReportPhoto(event)">
+                <div id="report-photo-preview" class="mt-2 hidden">
+                    <img id="report-photo-img" class="photo-preview">
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <button onclick="setRiskLevel('low', this)" class="risk-btn p-3 border-2 rounded-lg text-xs font-bold text-green-600 border-green-500 hover:bg-green-50">Bajo</button>
+                <button onclick="setRiskLevel('medium', this)" class="risk-btn p-3 border-2 rounded-lg text-xs font-bold text-yellow-600 border-yellow-500 hover:bg-yellow-50">Medio</button>
+                <button onclick="setRiskLevel('high', this)" class="risk-btn p-3 border-2 rounded-lg text-xs font-bold text-red-600 border-red-500 hover:bg-red-50">Alto</button>
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="closeReportModal()" class="flex-1 py-3 text-gray-600 font-bold bg-gray-100 rounded-xl hover:bg-gray-200">Cancelar</button>
+                <button onclick="submitReport()" class="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg hover:bg-red-700">Enviar Reporte</button>
+            </div>
+        </div>
+    </div>
+    <div class="search-box hidden" id="search-box">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-lg">Planea tu ruta</h3>
+            <button onclick="toggleMenu()" class="p-2 hover:bg-gray-100 rounded-full">
+                <i data-lucide="more-vertical" class="w-5 h-5"></i>
+            </button>
+        </div>
+        
+        <div class="space-y-3">
+            <div class="input-row">
+                <div class="w-3 h-3 bg-blue-600 rounded-full"></div>
+                <input type="text" id="origin" placeholder="Tu ubicación" onfocus="showOriginSuggestions()" oninput="searchOrigin(this.value)">
+                <div id="origin-suggestions" class="suggestions-box"></div>
+            </div>
+            
+            <div class="input-row">
+                <div class="w-3 h-3 bg-red-600 rounded-sm"></div>
+                <input type="text" id="destination" placeholder="¿A dónde vas?" onfocus="showDestinationSuggestions()" oninput="searchDestination(this.value)">
+                <div id="dest-suggestions" class="suggestions-box"></div>
+            </div>
+            
+            <button onclick="calculateRoute()" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3.5 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all">
+                Buscar Ruta Segura
+            </button>
+        </div>
+    </div>
+
+    <div id="app-menu" class="fixed top-16 right-4 w-56 bg-white rounded-2xl shadow-2xl z-[2000] hidden overflow-hidden">
+        <div onclick="showProfile()" class="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center text-sm border-b">
+            <i data-lucide="user" class="w-4 h-4 mr-3 text-blue-600"></i>
+            <span class="font-medium">Mi Perfil</span>
+        </div>
+        <div onclick="openReportModal()" class="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center text-sm border-b">
+            <i data-lucide="alert-triangle" class="w-4 h-4 mr-3 text-red-600"></i>
+            <span class="font-medium">Reportar Incidente</span>
+        </div>
+        <div onclick="toggle3DMode()" class="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center text-sm border-b">
+            <i data-lucide="compass" class="w-4 h-4 mr-3 text-purple-600"></i>
+            <span class="font-medium">Modo 3D</span>
+        </div>
+        <div onclick="viewReports()" class="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center text-sm">
+            <i data-lucide="map-pin" class="w-4 h-4 mr-3 text-orange-600"></i>
+            <span class="font-medium">Ver Reportes</span>
+        </div>
+    </div>
+
+    <div class="fab fab-3d" onclick="toggle3DMode()">
+        <i data-lucide="box" class="w-6 h-6 text-gray-700"></i>
+    </div>
+    <div class="fab fab-loc" onclick="centerOnUser()">
+        <i data-lucide="navigation" class="w-6 h-6 text-blue-600"></i>
+    </div>
+
+    <div id="bottom-sheet" class="bottom-sheet">
+        <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto my-4 cursor-pointer" onclick="closeBottomSheet()"></div>
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-5">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900" id="route-time">-- min</h2>
+                    <p class="text-sm text-gray-500 flex items-center mt-1">
+                        <i data-lucide="map" class="w-4 h-4 mr-1"></i>
+                        <span id="route-distance">-- km</span>
+                    </p>
+                </div>
+                <span id="risk-badge" class="px-3 py-2 rounded-lg text-xs font-bold uppercase">--</span>
+            </div>
+
+            <div id="transport-list" class="space-y-2 mb-5"></div>
+            
+            <button onclick="startTrip()" class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg text-lg hover:shadow-xl transition-all">
+                Iniciar Viaje
+            </button>
+        </div>
+    </div>
+    <script>
+
+        const API_URL = 'https://zeta-2.onrender.com/api';
+        // Para desarrollo local: 'http://127.0.0.1:5002/api'
+        
+        let map, routeLayer, userMarker;
+        const CENTER = [28.6353, -106.0886];
+        let currentUser = null;
+        let userCoords = null;
+        let selectedRiskLevel = 'low';
+        let currentRouteData = null;
+        let reportPhotoBase64 = '';
+        let profilePhotoBase64 = '';
+        let is3DMode = false;
+
+        window.onload = function() {
+            checkUserSession();
+            lucide.createIcons();
+        };
+
+        function checkUserSession() {
+            const savedUser = localStorage.getItem('zeta_user');
+            const termsAccepted = localStorage.getItem('zeta_terms_accepted');
+            
+            if (!termsAccepted) {
+                document.getElementById('terms-modal').style.display = 'flex';
+            } else if (!savedUser) {
+                document.getElementById('terms-modal').style.display = 'none';
+                document.getElementById('register-modal').classList.remove('hidden');
+                document.getElementById('register-modal').style.display = 'flex';
+            } else {
+                currentUser = JSON.parse(savedUser);
+                startApp();
+            }
+        }
+
+        function acceptTerms() {
+            localStorage.setItem('zeta_terms_accepted', 'true');
+            document.getElementById('terms-modal').style.display = 'none';
+            document.getElementById('register-modal').classList.remove('hidden');
+            document.getElementById('register-modal').style.display = 'flex';
+        }
+
+        function previewProfilePic(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profilePhotoBase64 = e.target.result;
+                    document.getElementById('profile-preview').innerHTML = 
+                        `<img src="${profilePhotoBase64}" class="w-full h-full object-cover">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function registerUser() {
+            const name = document.getElementById('reg-name').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            
+            if (!name || !email) {
+                alert('Por favor completa todos los campos');
+                return;
+            }
+            
+            if (!email.includes('@')) {
+                alert('Email inválido');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        photo: profilePhotoBase64,
+                        accepted_terms: true
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    currentUser = data.user;
+                    localStorage.setItem('zeta_user', JSON.stringify(currentUser));
+                    document.getElementById('register-modal').style.display = 'none';
+                    startApp();
+                } else {
+                    alert(data.message || 'Error al registrar');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión. Verifica tu internet.');
+            }
+        }
+
+        function skipRegistration() {
+            currentUser = {
+                id: 'guest_' + Date.now(),
+                name: 'Invitado',
+                email: 'guest@zeta.app',
+                photo: ''
+            };
+            localStorage.setItem('zeta_user', JSON.stringify(currentUser));
+            document.getElementById('register-modal').style.display = 'none';
+            startApp();
+        }
+
+        function startApp() {
+            document.getElementById('search-box').classList.remove('hidden');
+            initMap();
+            requestUserLocation();
+            loadReports();
+        }
+        function initMap() {
+            map = L.map('map', { zoomControl: false }).setView(CENTER, 13);
+            
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '©OpenStreetMap, ©CartoDB',
+                maxZoom: 19
+            }).addTo(map);
+
+            fetch(`${API_URL}/zones`)
+                .then(r => r.json())
+                .then(data => {
+                    data.zones.forEach(zone => {
+                        L.circle([zone.lat, zone.lon], {
+                            color: zone.color,
+                            fillColor: zone.color,
+                            fillOpacity: 0.2,
+                            radius: zone.radius_km * 1000,
+                            weight: 2
+                        }).addTo(map).bindPopup(`
+                            <div class="p-3">
+                                <h3 class="font-bold text-base">${zone.name}</h3>
+                                <p class="text-sm text-gray-600">Nivel: ${zone.level}</p>
+                            </div>
+                        `);
+                    });
+                })
+                .catch(err => console.error('Error loading zones:', err));
+
+            fetch(`${API_URL}/points`)
+                .then(r => r.json())
+                .then(places => {
+                    places.forEach(place => {
+                        const icons = {
+                            'Turismo': '🏛️', 'Cultura': '🎨', 'Recreación': '🌳',
+                            'Compras': '🛍️', 'Educación': '🎓', 'Salud': '🏥',
+                            'Restaurante': '🍽️', 'Hotel': '🏨', 'Transporte': '🚌',
+                            'Gobierno': '🏛️', 'Servicios': '🏦'
+                        };
+                        
+                        const icon = L.divIcon({
+                            className: 'text-2xl',
+                            html: icons[place.type] || '📍',
+                            iconSize: [28, 28]
+                        });
+                        
+                        L.marker([place.coords[0], place.coords[1]], {icon: icon})
+                            .addTo(map)
+                            .bindPopup(`
+                                <div class="p-3">
+                                    <h3 class="font-bold text-base">${place.name}</h3>
+                                    <p class="text-sm text-gray-500 mb-2">${place.type}</p>
+                                    <button onclick="setDestinationFromMap('${place.name}')" 
+                                        class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold w-full hover:bg-blue-700">
+                                        Ir aquí
+                                    </button>
+                                </div>
+                            `);
+                    });
+                })
+                .catch(err => console.error('Error loading places:', err));
+        }
+
+        function requestUserLocation() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userCoords = {
+                            lat: position.coords.latitude,
+                            lon: position.coords.longitude
+                        };
+                        updateUserMarker();
+                        document.getElementById('origin').value = "Mi ubicación";
+                        document.getElementById('origin').placeholder = "Mi ubicación";
+                    },
+                    (error) => {
+                        console.log("Geolocalización no disponible:", error);
+                        document.getElementById('origin').value = "Centro, Chihuahua";
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+                
+                setInterval(() => {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            userCoords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+                            updateUserMarker();
+                        },
+                        null,
+                        { enableHighAccuracy: true, maximumAge: 5000 }
+                    );
+                }, 10000);
+            }
+        }
+
+        function updateUserMarker() {
+            if (!userCoords || !map) return;
+            
+            if (userMarker) {
+                map.removeLayer(userMarker);
+            }
+            
+            const photoUrl = currentUser?.photo || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%233b82f6"/><text x="50" y="65" font-size="50" text-anchor="middle" fill="white">👤</text></svg>';
+            
+            const icon = L.divIcon({
+                className: 'user-marker-container',
+                html: `
+                    <div class="pulse-ring"></div>
+                    <div class="user-marker" style="background-image: url('${photoUrl}')"></div>
+                `,
+                iconSize: [50, 50],
+                iconAnchor: [25, 25]
+            });
+            
+            userMarker = L.marker([userCoords.lat, userCoords.lon], { icon: icon })
+                .addTo(map)
+                .bindPopup(`
+                    <div class="p-3 text-center">
+                        <p class="font-bold">${currentUser?.name || 'Tú'}</p>
+                        <p class="text-xs text-gray-500">Tu ubicación actual</p>
+                    </div>
+                `);
+        }
+
+        function centerOnUser() {
+            if (userCoords) {
+                map.flyTo([userCoords.lat, userCoords.lon], 16);
+                if (userMarker) userMarker.openPopup();
+            } else {
+                requestUserLocation();
+            }
+        }
+
+        function toggle3DMode() {
+            is3DMode = !is3DMode;
+            document.body.classList.toggle('map-3d-mode');
+            document.getElementById('app-menu').classList.remove('show');
+            
+            if (is3DMode) {
+                map.setZoom(17);
+                setTimeout(() => map.invalidateSize(), 900);
+            } else {
+                map.setZoom(13);
+                setTimeout(() => map.invalidateSize(), 900);
+            }
+        }
+        function showOriginSuggestions() {
+            const box = document.getElementById('origin-suggestions');
+            box.innerHTML = `
+                <div class="p-3 bg-gray-50 border-b">
+                    <p class="text-xs font-bold text-gray-500 uppercase">Tu ubicación</p>
+                </div>
+                <div class="suggestion-item" onclick="useCurrentLocation()">
+                    <i data-lucide="navigation" class="w-5 h-5 text-blue-600"></i>
+                    <span class="text-sm font-medium">Usar ubicación actual</span>
+                </div>
+            `;
+            box.classList.add('show');
+            lucide.createIcons();
+        }
+
+        async function showDestinationSuggestions() {
+            const box = document.getElementById('dest-suggestions');
+            box.innerHTML = '<div class="p-3 text-center text-sm text-gray-500">Cargando...</div>';
+            box.classList.add('show');
+            
+            try {
+                const response = await fetch(`${API_URL}/points`);
+                const places = await response.json();
+                
+                const popular = places.slice(0, 8);
+                
+                box.innerHTML = `
+                    <div class="p-3 bg-gray-50 border-b">
+                        <p class="text-xs font-bold text-gray-500 uppercase">Lugares Populares</p>
+                    </div>
+                    ${popular.map(p => `
+                        <div class="suggestion-item" onclick="selectDestination('${p.name}')">
+                            <span class="text-xl">${getPlaceIcon(p.type)}</span>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium">${p.name}</p>
+                                <p class="text-xs text-gray-500">${p.type}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
+            } catch (error) {
+                box.innerHTML = '<div class="p-3 text-center text-sm text-red-600">Error al cargar lugares</div>';
+            }
+        }
+
+        async function searchOrigin(val) {
+            if (val.length < 2) {
+                showOriginSuggestions();
+                return;
+            }
+            
+            const box = document.getElementById('origin-suggestions');
+            
+            try {
+                const response = await fetch(`${API_URL}/search_suggestions?q=${encodeURIComponent(val)}`);
+                const suggestions = await response.json();
+                
+                if (suggestions.length === 0) {
+                    box.innerHTML = '<div class="p-3 text-center text-sm text-gray-500">No se encontraron resultados</div>';
+                } else {
+                    box.innerHTML = suggestions.map(s => `
+                        <div class="suggestion-item" onclick="selectOrigin('${s.name}')">
+                            <span class="text-xl">${getPlaceIcon(s.type)}</span>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium">${s.name}</p>
+                                <p class="text-xs text-gray-500">${s.type}</p>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                box.classList.add('show');
+            } catch (error) {
+                box.innerHTML = '<div class="p-3 text-center text-sm text-red-600">Error de conexión</div>';
+            }
+        }
+
+        async function searchDestination(val) {
+            if (val.length < 2) {
+                showDestinationSuggestions();
+                return;
+            }
+            
+            const box = document.getElementById('dest-suggestions');
+            
+            try {
+                const response = await fetch(`${API_URL}/search_suggestions?q=${encodeURIComponent(val)}`);
+                const suggestions = await response.json();
+                
+                if (suggestions.length === 0) {
+                    box.innerHTML = '<div class="p-3 text-center text-sm text-gray-500">No se encontraron resultados</div>';
+                } else {
+                    box.innerHTML = suggestions.map(s => `
+                        <div class="suggestion-item" onclick="selectDestination('${s.name}')">
+                            <span class="text-xl">${getPlaceIcon(s.type)}</span>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium">${s.name}</p>
+                                <p class="text-xs text-gray-500">${s.type}</p>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                box.classList.add('show');
+            } catch (error) {
+                box.innerHTML = '<div class="p-3 text-center text-sm text-red-600">Error de conexión</div>';
+            }
+        }
+
+        function getPlaceIcon(type) {
+            const icons = {
+                'Turismo': '🏛️', 'Cultura': '🎨', 'Recreación': '🌳',
+                'Compras': '🛍️', 'Educación': '🎓', 'Salud': '🏥',
+                'Restaurante': '🍽️', 'Hotel': '🏨', 'Transporte': '🚌',
+                'Gobierno': '🏛️', 'Servicios': '🏦', 'Comercial': '🏢'
+            };
+            return icons[type] || '📍';
+        }
+
+        function useCurrentLocation() {
+            if (userCoords) {
+                document.getElementById('origin').value = "Mi ubicación";
+                document.getElementById('origin-suggestions').classList.remove('show');
+                map.flyTo([userCoords.lat, userCoords.lon], 15);
+            } else {
+                requestUserLocation();
+            }
+        }
+
+        function selectOrigin(val) {
+            document.getElementById('origin').value = val;
+            document.getElementById('origin-suggestions').classList.remove('show');
+        }
+
+        function selectDestination(val) {
+            document.getElementById('destination').value = val;
+            document.getElementById('dest-suggestions').classList.remove('show');
+        }
+
+        function setDestinationFromMap(name) {
+            document.getElementById('destination').value = name;
+            map.closePopup();
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.input-row')) {
+                document.querySelectorAll('.suggestions-box').forEach(b => b.classList.remove('show'));
+            }
+            if (!e.target.closest('#app-menu') && !e.target.closest('button')) {
+                document.getElementById('app-menu').classList.remove('show');
+            }
+        });
+        async function calculateRoute() {
+            let origin = document.getElementById('origin').value.trim();
+            const destination = document.getElementById('destination').value.trim();
+            
+            if (!destination) {
+                alert('Por favor ingresa un destino');
+                return;
+            }
+
+            if (origin === "Mi ubicación" && userCoords) {
+                origin = `${userCoords.lat},${userCoords.lon}`;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/analyze_route`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ origin, destination })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    currentRouteData = data;
+                    
+                    if (routeLayer) map.removeLayer(routeLayer);
+                    
+                    routeLayer = L.geoJSON(data.route_geometry, {
+                        style: { color: '#000', weight: 6, opacity: 0.8 }
+                    }).addTo(map);
+                    
+                    map.fitBounds(routeLayer.getBounds(), { padding: [80, 350] });
+
+                    displayRouteResults(data);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al calcular ruta. Verifica tu conexión.');
+            }
+        }
+
+        function displayRouteResults(data) {
+            document.getElementById('bottom-sheet').classList.add('active');
+            
+            const transportIcons = {
+                'Automóvil': '🚗',
+                'Motocicleta': '🏍️',
+                'Bicicleta': '🚴',
+                'Caminando': '🚶'
+            };
+
+            document.getElementById('transport-list').innerHTML = data.transport_options.map((opt, i) => `
+                <div class="transport-option ${i === 0 ? 'selected' : ''}" onclick="selectTransport(this)">
+                    <div class="flex items-center flex-1">
+                        <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mr-4 text-2xl">
+                            ${transportIcons[opt.mode] || '🚗'}
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-900">${opt.mode}</p>
+                            <p class="text-sm text-gray-500">${opt.description}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-lg">${opt.time}</p>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('route-time').textContent = data.transport_options[0].time;
+            document.getElementById('route-distance').textContent = `${data.distance_km} km`;
+            
+            const riskColors = {
+                'Bajo': 'bg-green-100 text-green-800',
+                'Medio': 'bg-yellow-100 text-yellow-800',
+                'Alto': 'bg-red-100 text-red-800',
+                'Crítico': 'bg-black text-white'
+            };
+            
+            const badge = document.getElementById('risk-badge');
+            badge.className = `px-3 py-2 rounded-lg text-xs font-bold uppercase ${riskColors[data.risk_level]}`;
+            badge.textContent = `Riesgo: ${data.risk_level}`;
+        }
+
+        function selectTransport(el) {
+            document.querySelectorAll('.transport-option').forEach(e => e.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        function closeBottomSheet() {
+            document.getElementById('bottom-sheet').classList.remove('active');
+        }
+
+        function startTrip() {
+            if (!currentRouteData) {
+                alert('Primero busca una ruta');
+                return;
+            }
+            
+            const message = `🚀 Iniciando viaje seguro\n\n` +
+                `📍 Destino: ${currentRouteData.destination.name}\n` +
+                `⏱️ Tiempo estimado: ${currentRouteData.transport_options[0].time}\n` +
+                `📏 Distancia: ${currentRouteData.distance_km} km\n` +
+                `⚠️ Nivel de riesgo: ${currentRouteData.risk_level}\n\n` +
+                `¡Mantente seguro y alerta!`;
+            
+            alert(message);
+            closeBottomSheet();
+        }
+
+        function toggleMenu() {
+            document.getElementById('app-menu').classList.toggle('show');
+        }
+
+        function openReportModal() {
+            document.getElementById('app-menu').classList.remove('show');
+            document.getElementById('report-modal').classList.remove('hidden');
+            document.getElementById('report-modal').style.display = 'flex';
+        }
+
+        function closeReportModal() {
+            document.getElementById('report-modal').classList.add('hidden');
+            document.getElementById('report-modal').style.display = 'none';
+            document.getElementById('report-desc').value = '';
+            reportPhotoBase64 = '';
+            document.getElementById('report-photo-preview').classList.add('hidden');
+        }
+
+        function previewReportPhoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    reportPhotoBase64 = e.target.result;
+                    document.getElementById('report-photo-img').src = reportPhotoBase64;
+                    document.getElementById('report-photo-preview').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function setRiskLevel(level, btn) {
+            selectedRiskLevel = level;
+            document.querySelectorAll('.risk-btn').forEach(b => {
+                b.classList.remove('ring-4', 'ring-offset-2');
+            });
+            btn.classList.add('ring-4', 'ring-offset-2');
+        }
+
+        async function submitReport() {
+            const description = document.getElementById('report-desc').value.trim();
+            
+            if (!description || description.length < 10) {
+                alert('La descripción debe tener al menos 10 caracteres');
+                return;
+            }
+
+            const center = map.getCenter();
+            
+            try {
+                const response = await fetch(`${API_URL}/reports/submit`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        user_email: currentUser?.email,
+                        description: description,
+                        level: selectedRiskLevel,
+                        lat: center.lat,
+                        lon: center.lng,
+                        photo: reportPhotoBase64
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    alert('✅ Reporte enviado correctamente. Gracias por contribuir a la seguridad.');
+                    closeReportModal();
+                    loadReports();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al enviar reporte. Verifica tu conexión.');
+            }
+        }
+
+        async function loadReports() {
+            try {
+                const response = await fetch(`${API_URL}/reports/list`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    displayReportsOnMap(data.reports);
+                }
+            } catch (error) {
+                console.error('Error loading reports:', error);
+            }
+        }
+
+        function displayReportsOnMap(reports) {
+            reports.forEach(report => {
+                const colors = {
+                    'low': '#10b981',
+                    'medium': '#f59e0b',
+                    'high': '#ef4444'
+                };
+                
+                L.circleMarker([report.lat, report.lon], {
+                    radius: 8,
+                    fillColor: colors[report.level] || '#6b7280',
+                    color: '#fff',
+                    weight: 2,
+                    fillOpacity: 0.9
+                }).addTo(map).bindPopup(`
+                    <div class="p-3">
+                        <p class="font-bold text-sm mb-1">⚠️ Reporte</p>
+                        <p class="text-sm text-gray-700">${report.description}</p>
+                        ${report.photo ? `<img src="${report.photo}" class="w-full mt-2 rounded-lg">` : ''}
+                        <p class="text-xs text-gray-500 mt-2">Nivel: ${report.level}</p>
+                    </div>
+                `);
+            });
+        }
+
+        function showProfile() {
+            toggleMenu();
+            alert(`👤 Perfil\n\nNombre: ${currentUser?.name}\nEmail: ${currentUser?.email}`);
+        }
+
+        function viewReports() {
+            toggleMenu();
+            alert('Ver reportes de la comunidad (función en desarrollo)');
+        }
+    </script>
+</body>
+</html>
