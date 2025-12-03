@@ -9,54 +9,44 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    
     <style>
         * { box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; overflow: hidden; }
-        
         #map { height: 100vh; width: 100%; z-index: 0; }
-        
         .map-3d-mode #map {
             transform: perspective(1200px) rotateX(45deg) translateY(-10%);
             transform-origin: center bottom;
             transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
         .user-marker {
             width: 50px; height: 50px; border-radius: 50%;
             border: 4px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             background-size: cover; background-position: center; position: relative;
         }
-        
         .user-marker::after {
             content: ''; position: absolute; bottom: -20px; left: 50%;
             transform: translateX(-50%); width: 0; height: 0;
             border-left: 10px solid transparent; border-right: 10px solid transparent;
             border-top: 20px solid white; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
         }
-        
         .pulse-ring {
             position: absolute; width: 100%; height: 100%; border-radius: 50%;
             background: rgba(59, 130, 246, 0.3); animation: pulse 2s infinite;
         }
-        
         @keyframes pulse {
             0% { transform: scale(1); opacity: 1; }
             100% { transform: scale(2); opacity: 0; }
         }
-        
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.8);
             backdrop-filter: blur(8px); z-index: 5000;
             display: flex; align-items: center; justify-content: center;
         }
-        
         .search-box {
             position: absolute; top: 16px; left: 16px; right: 16px; z-index: 1000;
             background: white; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
             padding: 16px;
         }
-        
         .fab {
             position: absolute; right: 16px; width: 56px; height: 56px;
             background: white; border-radius: 50%; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
@@ -66,7 +56,6 @@
         .fab:active { transform: scale(0.9); }
         .fab-3d { bottom: 90px; }
         .fab-loc { bottom: 160px; }
-        
         .bottom-sheet {
             position: absolute; bottom: 0; left: 0; right: 0;
             background: white; border-radius: 24px 24px 0 0;
@@ -75,7 +64,6 @@
             max-height: 75vh; overflow-y: auto;
         }
         .bottom-sheet.active { transform: translateY(0); }
-        
         .input-row {
             display: flex; align-items: center; background: #f3f4f6;
             border-radius: 12px; padding: 12px; position: relative;
@@ -84,7 +72,6 @@
             background: transparent; width: 100%; outline: none;
             font-size: 15px; margin-left: 10px; border: none;
         }
-        
         .suggestions-box {
             position: absolute; top: 100%; left: 0; right: 0;
             background: white; border-radius: 12px; margin-top: 8px;
@@ -92,14 +79,12 @@
             overflow-y: auto; z-index: 1002; display: none;
         }
         .suggestions-box.show { display: block; }
-        
         .suggestion-item {
             padding: 14px; border-bottom: 1px solid #f3f4f6;
             cursor: pointer; display: flex; align-items: center; gap: 12px;
             transition: background 0.15s;
         }
         .suggestion-item:hover { background: #f9fafb; }
-        
         .transport-option {
             display: flex; justify-content: space-between; align-items: center;
             padding: 14px; border-radius: 12px; border: 2px solid transparent;
@@ -107,12 +92,10 @@
         }
         .transport-option:hover { background: #f9fafb; }
         .transport-option.selected { background: #f3f4f6; border-color: #000; }
-        
         .photo-preview {
             width: 100px; height: 100px; border-radius: 12px;
             object-fit: cover; cursor: pointer; border: 2px solid #e5e7eb;
         }
-        
         .profile-pic-upload {
             width: 120px; height: 120px; border-radius: 50%;
             border: 4px dashed #d1d5db; display: flex;
@@ -135,7 +118,6 @@
                 <h2 class="text-2xl font-bold text-gray-900">Bienvenido a Zeta</h2>
                 <p class="text-gray-600 mt-2">Tu seguridad es nuestra prioridad</p>
             </div>
-            
             <div class="bg-gray-50 rounded-2xl p-4 max-h-64 overflow-y-auto mb-6 text-sm">
                 <h3 class="font-bold mb-2">Términos y Condiciones</h3>
                 <p class="text-gray-700 mb-3">Al usar Zeta, aceptas:</p>
@@ -151,7 +133,6 @@
                     Tu información se maneja de forma confidencial según nuestras políticas.
                 </p>
             </div>
-            
             <button onclick="acceptTerms()" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all">
                 Aceptar y Continuar
             </button>
@@ -161,7 +142,6 @@
     <div id="register-modal" class="modal-overlay hidden">
         <div class="bg-white rounded-3xl p-8 max-w-md w-11/12 shadow-2xl">
             <h2 class="text-2xl font-bold text-center mb-6">Crea tu Cuenta</h2>
-            
             <div class="flex flex-col items-center mb-6">
                 <label for="profile-pic-input" class="profile-pic-upload">
                     <div id="profile-preview" class="text-center">
@@ -171,10 +151,8 @@
                 </label>
                 <input type="file" id="profile-pic-input" accept="image/*" class="hidden" onchange="previewProfilePic(event)">
             </div>
-            
             <input type="text" id="reg-name" placeholder="Nombre completo" class="w-full p-4 border rounded-xl mb-4 focus:ring-2 focus:ring-blue-500 outline-none">
             <input type="email" id="reg-email" placeholder="Correo electrónico" class="w-full p-4 border rounded-xl mb-6 focus:ring-2 focus:ring-blue-500 outline-none">
-            
             <button onclick="registerUser()" class="w-full bg-black text-white py-4 rounded-xl font-bold shadow-lg hover:bg-gray-800 transition-all mb-3">
                 Registrarse
             </button>
@@ -187,9 +165,7 @@
     <div id="report-modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[3000] backdrop-blur-sm">
         <div class="bg-white p-6 rounded-2xl w-11/12 max-w-md shadow-2xl">
             <h3 class="text-xl font-bold mb-4">Reportar Incidente</h3>
-            
             <textarea id="report-desc" class="w-full p-3 border rounded-xl text-sm mb-3" rows="3" placeholder="Describe lo que sucede (mínimo 10 caracteres)..."></textarea>
-            
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Adjuntar foto (opcional)</label>
                 <input type="file" id="report-photo" accept="image/*" class="w-full text-sm" onchange="previewReportPhoto(event)">
@@ -197,13 +173,11 @@
                     <img id="report-photo-img" class="photo-preview">
                 </div>
             </div>
-            
             <div class="grid grid-cols-3 gap-2 mb-4">
                 <button onclick="setRiskLevel('low', this)" class="risk-btn p-3 border-2 rounded-lg text-xs font-bold text-green-600 border-green-500 hover:bg-green-50">Bajo</button>
                 <button onclick="setRiskLevel('medium', this)" class="risk-btn p-3 border-2 rounded-lg text-xs font-bold text-yellow-600 border-yellow-500 hover:bg-yellow-50">Medio</button>
                 <button onclick="setRiskLevel('high', this)" class="risk-btn p-3 border-2 rounded-lg text-xs font-bold text-red-600 border-red-500 hover:bg-red-50">Alto</button>
             </div>
-            
             <div class="flex gap-3">
                 <button onclick="closeReportModal()" class="flex-1 py-3 text-gray-600 font-bold bg-gray-100 rounded-xl hover:bg-gray-200">Cancelar</button>
                 <button onclick="submitReport()" class="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg hover:bg-red-700">Enviar Reporte</button>
@@ -217,20 +191,17 @@
                 <i data-lucide="more-vertical" class="w-5 h-5"></i>
             </button>
         </div>
-        
         <div class="space-y-3">
             <div class="input-row">
                 <div class="w-3 h-3 bg-blue-600 rounded-full"></div>
                 <input type="text" id="origin" placeholder="Tu ubicación" onfocus="showOriginSuggestions()" oninput="searchOrigin(this.value)">
                 <div id="origin-suggestions" class="suggestions-box"></div>
             </div>
-            
             <div class="input-row">
                 <div class="w-3 h-3 bg-red-600 rounded-sm"></div>
                 <input type="text" id="destination" placeholder="¿A dónde vas?" onfocus="showDestinationSuggestions()" oninput="searchDestination(this.value)">
                 <div id="dest-suggestions" class="suggestions-box"></div>
             </div>
-            
             <button onclick="calculateRoute()" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3.5 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all">
                 Buscar Ruta Segura
             </button>
@@ -276,18 +247,14 @@
                 </div>
                 <span id="risk-badge" class="px-3 py-2 rounded-lg text-xs font-bold uppercase">--</span>
             </div>
-
             <div id="transport-list" class="space-y-2 mb-5"></div>
-            
             <button onclick="startTrip()" class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg text-lg hover:shadow-xl transition-all">
                 Iniciar Viaje
             </button>
         </div>
     </div>
     <script>
-
         const API_URL = 'https://zeta-2.onrender.com/api';
-        // Para desarrollo local: 'http://127.0.0.1:5002/api'
         
         let map, routeLayer, userMarker;
         const CENTER = [28.6353, -106.0886];
@@ -298,6 +265,9 @@
         let reportPhotoBase64 = '';
         let profilePhotoBase64 = '';
         let is3DMode = false;
+        let searchTimeout = null;
+        let selectedOriginCoords = null;
+        let selectedDestCoords = null;
 
         window.onload = function() {
             checkUserSession();
@@ -307,7 +277,6 @@
         function checkUserSession() {
             const savedUser = localStorage.getItem('zeta_user');
             const termsAccepted = localStorage.getItem('zeta_terms_accepted');
-            
             if (!termsAccepted) {
                 document.getElementById('terms-modal').style.display = 'flex';
             } else if (!savedUser) {
@@ -333,8 +302,7 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     profilePhotoBase64 = e.target.result;
-                    document.getElementById('profile-preview').innerHTML = 
-                        `<img src="${profilePhotoBase64}" class="w-full h-full object-cover">`;
+                    document.getElementById('profile-preview').innerHTML = `<img src="${profilePhotoBase64}" class="w-full h-full object-cover">`;
                 };
                 reader.readAsDataURL(file);
             }
@@ -343,31 +311,21 @@
         async function registerUser() {
             const name = document.getElementById('reg-name').value.trim();
             const email = document.getElementById('reg-email').value.trim();
-            
             if (!name || !email) {
                 alert('Por favor completa todos los campos');
                 return;
             }
-            
             if (!email.includes('@')) {
                 alert('Email inválido');
                 return;
             }
-
             try {
                 const response = await fetch(`${API_URL}/auth/register`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        name: name,
-                        email: email,
-                        photo: profilePhotoBase64,
-                        accepted_terms: true
-                    })
+                    body: JSON.stringify({name: name, email: email, photo: profilePhotoBase64, accepted_terms: true})
                 });
-
                 const data = await response.json();
-                
                 if (data.status === 'success') {
                     currentUser = data.user;
                     localStorage.setItem('zeta_user', JSON.stringify(currentUser));
@@ -383,12 +341,7 @@
         }
 
         function skipRegistration() {
-            currentUser = {
-                id: 'guest_' + Date.now(),
-                name: 'Invitado',
-                email: 'guest@zeta.app',
-                photo: ''
-            };
+            currentUser = {id: 'guest_' + Date.now(), name: 'Invitado', email: 'guest@zeta.app', photo: ''};
             localStorage.setItem('zeta_user', JSON.stringify(currentUser));
             document.getElementById('register-modal').style.display = 'none';
             startApp();
@@ -402,77 +355,47 @@
         }
         function initMap() {
             map = L.map('map', { zoomControl: false }).setView(CENTER, 13);
-            
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '©OpenStreetMap, ©CartoDB',
-                maxZoom: 19
+                attribution: '©OpenStreetMap, ©CartoDB', maxZoom: 19
             }).addTo(map);
 
-            fetch(`${API_URL}/zones`)
-                .then(r => r.json())
-                .then(data => {
-                    data.zones.forEach(zone => {
-                        L.circle([zone.lat, zone.lon], {
-                            color: zone.color,
-                            fillColor: zone.color,
-                            fillOpacity: 0.2,
-                            radius: zone.radius_km * 1000,
-                            weight: 2
-                        }).addTo(map).bindPopup(`
-                            <div class="p-3">
-                                <h3 class="font-bold text-base">${zone.name}</h3>
-                                <p class="text-sm text-gray-600">Nivel: ${zone.level}</p>
-                            </div>
-                        `);
-                    });
-                })
-                .catch(err => console.error('Error loading zones:', err));
+            fetch(`${API_URL}/zones`).then(r => r.json()).then(data => {
+                data.zones.forEach(zone => {
+                    L.circle([zone.lat, zone.lon], {
+                        color: zone.color, fillColor: zone.color, fillOpacity: 0.2,
+                        radius: zone.radius_km * 1000, weight: 2
+                    }).addTo(map).bindPopup(`<div class="p-3"><h3 class="font-bold text-base">${zone.name}</h3><p class="text-sm text-gray-600">Nivel: ${zone.level}</p></div>`);
+                });
+            }).catch(err => console.error('Error loading zones:', err));
 
-            fetch(`${API_URL}/points`)
-                .then(r => r.json())
-                .then(places => {
-                    places.forEach(place => {
-                        const icons = {
-                            'Turismo': '🏛️', 'Cultura': '🎨', 'Recreación': '🌳',
-                            'Compras': '🛍️', 'Educación': '🎓', 'Salud': '🏥',
-                            'Restaurante': '🍽️', 'Hotel': '🏨', 'Transporte': '🚌',
-                            'Gobierno': '🏛️', 'Servicios': '🏦'
-                        };
-                        
-                        const icon = L.divIcon({
-                            className: 'text-2xl',
-                            html: icons[place.type] || '📍',
-                            iconSize: [28, 28]
-                        });
-                        
-                        L.marker([place.coords[0], place.coords[1]], {icon: icon})
-                            .addTo(map)
-                            .bindPopup(`
-                                <div class="p-3">
-                                    <h3 class="font-bold text-base">${place.name}</h3>
-                                    <p class="text-sm text-gray-500 mb-2">${place.type}</p>
-                                    <button onclick="setDestinationFromMap('${place.name}')" 
-                                        class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold w-full hover:bg-blue-700">
-                                        Ir aquí
-                                    </button>
-                                </div>
-                            `);
-                    });
-                })
-                .catch(err => console.error('Error loading places:', err));
+            fetch(`${API_URL}/points`).then(r => r.json()).then(places => {
+                places.forEach(place => {
+                    const icons = {'Turismo': '🏛️', 'Cultura': '🎨', 'Recreación': '🌳', 'Compras': '🛍️', 'Educación': '🎓', 'Salud': '🏥', 'Restaurante': '🍽️', 'Hotel': '🏨', 'Transporte': '🚌', 'Gobierno': '🏛️', 'Servicios': '🏦'};
+                    const icon = L.divIcon({className: 'text-2xl', html: icons[place.type] || '📍', iconSize: [28, 28]});
+                    L.marker([place.coords[0], place.coords[1]], {icon: icon}).addTo(map).bindPopup(`<div class="p-3"><h3 class="font-bold text-base">${place.name}</h3><p class="text-sm text-gray-500 mb-2">${place.type}</p><button onclick="setDestinationFromMap('${place.name}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold w-full hover:bg-blue-700">Ir aquí</button></div>`);
+                });
+            }).catch(err => console.error('Error loading places:', err));
         }
 
         function requestUserLocation() {
             if ("geolocation" in navigator) {
                 navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        userCoords = {
-                            lat: position.coords.latitude,
-                            lon: position.coords.longitude
-                        };
+                    async (position) => {
+                        userCoords = {lat: position.coords.latitude, lon: position.coords.longitude};
+                        try {
+                            const response = await fetch(`${API_URL}/reverse_geocode`, {
+                                method: 'POST', headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify(userCoords)
+                            });
+                            const data = await response.json();
+                            if (data.status === 'success') {
+                                document.getElementById('origin').value = data.address;
+                                document.getElementById('origin').placeholder = data.address;
+                            }
+                        } catch (error) {
+                            document.getElementById('origin').value = "Mi ubicación";
+                        }
                         updateUserMarker();
-                        document.getElementById('origin').value = "Mi ubicación";
-                        document.getElementById('origin').placeholder = "Mi ubicación";
                     },
                     (error) => {
                         console.log("Geolocalización no disponible:", error);
@@ -480,15 +403,12 @@
                     },
                     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );
-                
                 setInterval(() => {
                     navigator.geolocation.getCurrentPosition(
                         (pos) => {
                             userCoords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
                             updateUserMarker();
-                        },
-                        null,
-                        { enableHighAccuracy: true, maximumAge: 5000 }
+                        }, null, { enableHighAccuracy: true, maximumAge: 5000 }
                     );
                 }, 10000);
             }
@@ -496,31 +416,14 @@
 
         function updateUserMarker() {
             if (!userCoords || !map) return;
-            
-            if (userMarker) {
-                map.removeLayer(userMarker);
-            }
-            
+            if (userMarker) map.removeLayer(userMarker);
             const photoUrl = currentUser?.photo || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%233b82f6"/><text x="50" y="65" font-size="50" text-anchor="middle" fill="white">👤</text></svg>';
-            
             const icon = L.divIcon({
                 className: 'user-marker-container',
-                html: `
-                    <div class="pulse-ring"></div>
-                    <div class="user-marker" style="background-image: url('${photoUrl}')"></div>
-                `,
-                iconSize: [50, 50],
-                iconAnchor: [25, 25]
+                html: `<div class="pulse-ring"></div><div class="user-marker" style="background-image: url('${photoUrl}')"></div>`,
+                iconSize: [50, 50], iconAnchor: [25, 25]
             });
-            
-            userMarker = L.marker([userCoords.lat, userCoords.lon], { icon: icon })
-                .addTo(map)
-                .bindPopup(`
-                    <div class="p-3 text-center">
-                        <p class="font-bold">${currentUser?.name || 'Tú'}</p>
-                        <p class="text-xs text-gray-500">Tu ubicación actual</p>
-                    </div>
-                `);
+            userMarker = L.marker([userCoords.lat, userCoords.lon], { icon: icon }).addTo(map).bindPopup(`<div class="p-3 text-center"><p class="font-bold">${currentUser?.name || 'Tú'}</p><p class="text-xs text-gray-500">Tu ubicación actual</p></div>`);
         }
 
         function centerOnUser() {
@@ -536,7 +439,6 @@
             is3DMode = !is3DMode;
             document.body.classList.toggle('map-3d-mode');
             document.getElementById('app-menu').classList.remove('show');
-            
             if (is3DMode) {
                 map.setZoom(17);
                 setTimeout(() => map.invalidateSize(), 900);
@@ -564,26 +466,15 @@
             const box = document.getElementById('dest-suggestions');
             box.innerHTML = '<div class="p-3 text-center text-sm text-gray-500">Cargando...</div>';
             box.classList.add('show');
-            
             try {
                 const response = await fetch(`${API_URL}/points`);
                 const places = await response.json();
-                
                 const popular = places.slice(0, 8);
-                
                 box.innerHTML = `
                     <div class="p-3 bg-gray-50 border-b">
                         <p class="text-xs font-bold text-gray-500 uppercase">Lugares Populares</p>
                     </div>
-                    ${popular.map(p => `
-                        <div class="suggestion-item" onclick="selectDestination('${p.name}')">
-                            <span class="text-xl">${getPlaceIcon(p.type)}</span>
-                            <div class="flex-1">
-                                <p class="text-sm font-medium">${p.name}</p>
-                                <p class="text-xs text-gray-500">${p.type}</p>
-                            </div>
-                        </div>
-                    `).join('')}
+                    ${popular.map(p => `<div class="suggestion-item" onclick="selectDestination('${p.name}')"><span class="text-xl">${getPlaceIcon(p.type)}</span><div class="flex-1"><p class="text-sm font-medium">${p.name}</p><p class="text-xs text-gray-500">${p.type}</p></div></div>`).join('')}
                 `;
             } catch (error) {
                 box.innerHTML = '<div class="p-3 text-center text-sm text-red-600">Error al cargar lugares</div>';
@@ -591,75 +482,95 @@
         }
 
         async function searchOrigin(val) {
-            if (val.length < 2) {
+            if (val.length < 3) {
                 showOriginSuggestions();
                 return;
             }
-            
-            const box = document.getElementById('origin-suggestions');
-            
-            try {
-                const response = await fetch(`${API_URL}/search_suggestions?q=${encodeURIComponent(val)}`);
-                const suggestions = await response.json();
-                
-                if (suggestions.length === 0) {
-                    box.innerHTML = '<div class="p-3 text-center text-sm text-gray-500">No se encontraron resultados</div>';
-                } else {
-                    box.innerHTML = suggestions.map(s => `
-                        <div class="suggestion-item" onclick="selectOrigin('${s.name}')">
-                            <span class="text-xl">${getPlaceIcon(s.type)}</span>
-                            <div class="flex-1">
-                                <p class="text-sm font-medium">${s.name}</p>
-                                <p class="text-xs text-gray-500">${s.type}</p>
-                            </div>
-                        </div>
-                    `).join('');
-                }
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                const box = document.getElementById('origin-suggestions');
+                box.innerHTML = '<div class="p-3 text-center text-sm text-gray-500">Buscando...</div>';
                 box.classList.add('show');
-            } catch (error) {
-                box.innerHTML = '<div class="p-3 text-center text-sm text-red-600">Error de conexión</div>';
-            }
+                try {
+                    const response = await fetch(`${API_URL}/search_places?q=${encodeURIComponent(val)}`);
+                    const suggestions = await response.json();
+                    if (suggestions.length === 0) {
+                        box.innerHTML = `<div class="p-4 text-center"><p class="text-sm text-gray-500 mb-2">No se encontraron resultados para "${val}"</p><p class="text-xs text-gray-400">Intenta con: calle, colonia o nombre de lugar</p></div>`;
+                    } else {
+                        box.innerHTML = `
+                            <div class="p-2 bg-blue-50 border-b">
+                                <p class="text-xs font-bold text-blue-700 uppercase flex items-center gap-2"><span>🔍</span> ${suggestions.length} resultado${suggestions.length > 1 ? 's' : ''}</p>
+                            </div>
+                            ${suggestions.map(s => `<div class="suggestion-item" onclick='selectOriginWithCoords(${JSON.stringify(s)})'><span class="text-xl">${getIconForType(s.type)}</span><div class="flex-1"><p class="text-sm font-medium">${s.name}</p><p class="text-xs text-gray-500">${s.type}${s.source === 'osm' ? ' • OSM' : ''}</p></div></div>`).join('')}
+                        `;
+                    }
+                    box.classList.add('show');
+                } catch (error) {
+                    console.error('Error:', error);
+                    box.innerHTML = '<div class="p-3 text-center text-sm text-red-600">Error de conexión</div>';
+                }
+            }, 500);
         }
 
         async function searchDestination(val) {
-            if (val.length < 2) {
+            if (val.length < 3) {
                 showDestinationSuggestions();
                 return;
             }
-            
-            const box = document.getElementById('dest-suggestions');
-            
-            try {
-                const response = await fetch(`${API_URL}/search_suggestions?q=${encodeURIComponent(val)}`);
-                const suggestions = await response.json();
-                
-                if (suggestions.length === 0) {
-                    box.innerHTML = '<div class="p-3 text-center text-sm text-gray-500">No se encontraron resultados</div>';
-                } else {
-                    box.innerHTML = suggestions.map(s => `
-                        <div class="suggestion-item" onclick="selectDestination('${s.name}')">
-                            <span class="text-xl">${getPlaceIcon(s.type)}</span>
-                            <div class="flex-1">
-                                <p class="text-sm font-medium">${s.name}</p>
-                                <p class="text-xs text-gray-500">${s.type}</p>
-                            </div>
-                        </div>
-                    `).join('');
-                }
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                const box = document.getElementById('dest-suggestions');
+                box.innerHTML = '<div class="p-3 text-center text-sm text-gray-500">Buscando...</div>';
                 box.classList.add('show');
-            } catch (error) {
-                box.innerHTML = '<div class="p-3 text-center text-sm text-red-600">Error de conexión</div>';
-            }
+                try {
+                    const response = await fetch(`${API_URL}/search_places?q=${encodeURIComponent(val)}`);
+                    const suggestions = await response.json();
+                    if (suggestions.length === 0) {
+                        box.innerHTML = `<div class="p-4 text-center"><p class="text-sm text-gray-500 mb-2">No se encontraron resultados para "${val}"</p><p class="text-xs text-gray-400">Ejemplos: "Libertadores de América", "Fashion Mall", "UACH"</p></div>`;
+                    } else {
+                        box.innerHTML = `
+                            <div class="p-2 bg-blue-50 border-b">
+                                <p class="text-xs font-bold text-blue-700 uppercase flex items-center gap-2"><span>🔍</span> ${suggestions.length} resultado${suggestions.length > 1 ? 's' : ''}</p>
+                            </div>
+                            ${suggestions.map(s => `<div class="suggestion-item" onclick='selectDestinationWithCoords(${JSON.stringify(s)})'><span class="text-xl">${getIconForType(s.type)}</span><div class="flex-1"><p class="text-sm font-medium">${s.name}</p><p class="text-xs text-gray-500">${s.type}${s.source === 'osm' ? ' • OSM' : ''}</p></div></div>`).join('')}
+                        `;
+                    }
+                    box.classList.add('show');
+                } catch (error) {
+                    console.error('Error:', error);
+                    box.innerHTML = '<div class="p-3 text-center text-sm text-red-600">Error de conexión</div>';
+                }
+            }, 500);
         }
 
         function getPlaceIcon(type) {
-            const icons = {
-                'Turismo': '🏛️', 'Cultura': '🎨', 'Recreación': '🌳',
-                'Compras': '🛍️', 'Educación': '🎓', 'Salud': '🏥',
-                'Restaurante': '🍽️', 'Hotel': '🏨', 'Transporte': '🚌',
-                'Gobierno': '🏛️', 'Servicios': '🏦', 'Comercial': '🏢'
-            };
+            const icons = {'Turismo': '🏛️', 'Cultura': '🎨', 'Recreación': '🌳', 'Compras': '🛍️', 'Educación': '🎓', 'Salud': '🏥', 'Restaurante': '🍽️', 'Hotel': '🏨', 'Transporte': '🚌', 'Gobierno': '🏛️', 'Servicios': '🏦', 'Comercial': '🏢'};
             return icons[type] || '📍';
+        }
+
+        function getIconForType(type) {
+            const icons = {'Calle': '🛣️', 'Colonia': '🏘️', 'Dirección': '📍', 'Turismo': '🏛️', 'Cultura': '🎨', 'Recreación': '🌳', 'Compras': '🛍️', 'Educación': '🎓', 'Salud': '🏥', 'Restaurante': '🍽️', 'Hotel': '🏨', 'Transporte': '🚌', 'Gobierno': '🏛️', 'Servicios': '🏦', 'Comercial': '🏢', 'Restaurant': '🍽️', 'Cafe': '☕', 'Bank': '🏦', 'Hospital': '🏥', 'School': '🎓', 'Pharmacy': '💊'};
+            return icons[type] || '📍';
+        }
+
+        function selectOriginWithCoords(place) {
+            document.getElementById('origin').value = place.name;
+            selectedOriginCoords = place.coords;
+            document.getElementById('origin-suggestions').classList.remove('show');
+            if (map && place.coords) {
+                map.flyTo(place.coords, 16);
+                L.marker(place.coords, {icon: L.divIcon({className: 'text-2xl', html: '📍', iconSize: [28, 28]})}).addTo(map).bindPopup(`<div class="p-2"><p class="font-bold text-sm">${place.name}</p><p class="text-xs text-gray-500">${place.type}</p></div>`).openPopup();
+            }
+        }
+
+        function selectDestinationWithCoords(place) {
+            document.getElementById('destination').value = place.name;
+            selectedDestCoords = place.coords;
+            document.getElementById('dest-suggestions').classList.remove('show');
+            if (map && place.coords) {
+                map.flyTo(place.coords, 16);
+                L.marker(place.coords, {icon: L.divIcon({className: 'text-2xl', html: '🎯', iconSize: [28, 28]})}).addTo(map).bindPopup(`<div class="p-2"><p class="font-bold text-sm">${place.name}</p><p class="text-xs text-gray-500">${place.type}</p></div>`).openPopup();
+            }
         }
 
         function useCurrentLocation() {
@@ -697,37 +608,30 @@
         });
         async function calculateRoute() {
             let origin = document.getElementById('origin').value.trim();
-            const destination = document.getElementById('destination').value.trim();
-            
+            let destination = document.getElementById('destination').value.trim();
             if (!destination) {
                 alert('Por favor ingresa un destino');
                 return;
             }
-
-            if (origin === "Mi ubicación" && userCoords) {
+            if (selectedOriginCoords) {
+                origin = `${selectedOriginCoords[0]},${selectedOriginCoords[1]}`;
+            } else if (origin === "Mi ubicación" && userCoords) {
                 origin = `${userCoords.lat},${userCoords.lon}`;
             }
-
+            if (selectedDestCoords) {
+                destination = `${selectedDestCoords[0]},${selectedDestCoords[1]}`;
+            }
             try {
                 const response = await fetch(`${API_URL}/analyze_route`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ origin, destination })
                 });
-
                 const data = await response.json();
-
                 if (data.status === 'success') {
                     currentRouteData = data;
-                    
                     if (routeLayer) map.removeLayer(routeLayer);
-                    
-                    routeLayer = L.geoJSON(data.route_geometry, {
-                        style: { color: '#000', weight: 6, opacity: 0.8 }
-                    }).addTo(map);
-                    
+                    routeLayer = L.geoJSON(data.route_geometry, {style: { color: '#000', weight: 6, opacity: 0.8 }}).addTo(map);
                     map.fitBounds(routeLayer.getBounds(), { padding: [80, 350] });
-
                     displayRouteResults(data);
                 }
             } catch (error) {
@@ -738,41 +642,19 @@
 
         function displayRouteResults(data) {
             document.getElementById('bottom-sheet').classList.add('active');
-            
-            const transportIcons = {
-                'Automóvil': '🚗',
-                'Motocicleta': '🏍️',
-                'Bicicleta': '🚴',
-                'Caminando': '🚶'
-            };
-
+            const transportIcons = {'Automóvil': '🚗', 'Motocicleta': '🏍️', 'Bicicleta': '🚴', 'Caminando': '🚶'};
             document.getElementById('transport-list').innerHTML = data.transport_options.map((opt, i) => `
                 <div class="transport-option ${i === 0 ? 'selected' : ''}" onclick="selectTransport(this)">
                     <div class="flex items-center flex-1">
-                        <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mr-4 text-2xl">
-                            ${transportIcons[opt.mode] || '🚗'}
-                        </div>
-                        <div>
-                            <p class="font-bold text-gray-900">${opt.mode}</p>
-                            <p class="text-sm text-gray-500">${opt.description}</p>
-                        </div>
+                        <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mr-4 text-2xl">${transportIcons[opt.mode] || '🚗'}</div>
+                        <div><p class="font-bold text-gray-900">${opt.mode}</p><p class="text-sm text-gray-500">${opt.description}</p></div>
                     </div>
-                    <div class="text-right">
-                        <p class="font-bold text-lg">${opt.time}</p>
-                    </div>
+                    <div class="text-right"><p class="font-bold text-lg">${opt.time}</p></div>
                 </div>
             `).join('');
-            
             document.getElementById('route-time').textContent = data.transport_options[0].time;
             document.getElementById('route-distance').textContent = `${data.distance_km} km`;
-            
-            const riskColors = {
-                'Bajo': 'bg-green-100 text-green-800',
-                'Medio': 'bg-yellow-100 text-yellow-800',
-                'Alto': 'bg-red-100 text-red-800',
-                'Crítico': 'bg-black text-white'
-            };
-            
+            const riskColors = {'Bajo': 'bg-green-100 text-green-800', 'Medio': 'bg-yellow-100 text-yellow-800', 'Alto': 'bg-red-100 text-red-800', 'Crítico': 'bg-black text-white'};
             const badge = document.getElementById('risk-badge');
             badge.className = `px-3 py-2 rounded-lg text-xs font-bold uppercase ${riskColors[data.risk_level]}`;
             badge.textContent = `Riesgo: ${data.risk_level}`;
@@ -792,14 +674,7 @@
                 alert('Primero busca una ruta');
                 return;
             }
-            
-            const message = `🚀 Iniciando viaje seguro\n\n` +
-                `📍 Destino: ${currentRouteData.destination.name}\n` +
-                `⏱️ Tiempo estimado: ${currentRouteData.transport_options[0].time}\n` +
-                `📏 Distancia: ${currentRouteData.distance_km} km\n` +
-                `⚠️ Nivel de riesgo: ${currentRouteData.risk_level}\n\n` +
-                `¡Mantente seguro y alerta!`;
-            
+            const message = `🚀 Iniciando viaje seguro\n\n📍 Destino: ${currentRouteData.destination.name}\n⏱️ Tiempo estimado: ${currentRouteData.transport_options[0].time}\n📏 Distancia: ${currentRouteData.distance_km} km\n⚠️ Nivel de riesgo: ${currentRouteData.risk_level}\n\n¡Mantente seguro y alerta!`;
             alert(message);
             closeBottomSheet();
         }
@@ -845,30 +720,17 @@
 
         async function submitReport() {
             const description = document.getElementById('report-desc').value.trim();
-            
             if (!description || description.length < 10) {
                 alert('La descripción debe tener al menos 10 caracteres');
                 return;
             }
-
             const center = map.getCenter();
-            
             try {
                 const response = await fetch(`${API_URL}/reports/submit`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        user_email: currentUser?.email,
-                        description: description,
-                        level: selectedRiskLevel,
-                        lat: center.lat,
-                        lon: center.lng,
-                        photo: reportPhotoBase64
-                    })
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({user_email: currentUser?.email, description: description, level: selectedRiskLevel, lat: center.lat, lon: center.lng, photo: reportPhotoBase64})
                 });
-
                 const data = await response.json();
-                
                 if (data.status === 'success') {
                     alert('✅ Reporte enviado correctamente. Gracias por contribuir a la seguridad.');
                     closeReportModal();
@@ -886,7 +748,6 @@
             try {
                 const response = await fetch(`${API_URL}/reports/list`);
                 const data = await response.json();
-                
                 if (data.status === 'success') {
                     displayReportsOnMap(data.reports);
                 }
@@ -897,26 +758,11 @@
 
         function displayReportsOnMap(reports) {
             reports.forEach(report => {
-                const colors = {
-                    'low': '#10b981',
-                    'medium': '#f59e0b',
-                    'high': '#ef4444'
-                };
-                
+                const colors = {'low': '#10b981', 'medium': '#f59e0b', 'high': '#ef4444'};
                 L.circleMarker([report.lat, report.lon], {
-                    radius: 8,
-                    fillColor: colors[report.level] || '#6b7280',
-                    color: '#fff',
-                    weight: 2,
-                    fillOpacity: 0.9
-                }).addTo(map).bindPopup(`
-                    <div class="p-3">
-                        <p class="font-bold text-sm mb-1">⚠️ Reporte</p>
-                        <p class="text-sm text-gray-700">${report.description}</p>
-                        ${report.photo ? `<img src="${report.photo}" class="w-full mt-2 rounded-lg">` : ''}
-                        <p class="text-xs text-gray-500 mt-2">Nivel: ${report.level}</p>
-                    </div>
-                `);
+                    radius: 8, fillColor: colors[report.level] || '#6b7280',
+                    color: '#fff', weight: 2, fillOpacity: 0.9
+                }).addTo(map).bindPopup(`<div class="p-3"><p class="font-bold text-sm mb-1">⚠️ Reporte</p><p class="text-sm text-gray-700">${report.description}</p>${report.photo ? `<img src="${report.photo}" class="w-full mt-2 rounded-lg">` : ''}<p class="text-xs text-gray-500 mt-2">Nivel: ${report.level}</p></div>`);
             });
         }
 
