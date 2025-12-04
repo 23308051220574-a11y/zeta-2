@@ -3,261 +3,459 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zeta - Navegación Segura</title>
+    <title>Zeta - Navegación Segura Chihuahua</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; overflow: hidden; }
-        #map { height: 100vh; width: 100%; z-index: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', -apple-system, system-ui, sans-serif; overflow: hidden; background: #f8fafc; }
+        #map { height: 100vh; width: 100%; z-index: 0; position: relative; }
+        
         .map-3d-mode #map {
-            transform: perspective(1200px) rotateX(45deg) translateY(-10%);
+            transform: perspective(1400px) rotateX(50deg) translateY(-8%);
             transform-origin: center bottom;
-            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
+        
+        /* Marcador de usuario estilo Life360 */
         .user-marker {
-            width: 50px; height: 50px; border-radius: 50%;
-            border: 4px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            width: 56px; height: 56px; border-radius: 50%;
+            border: 5px solid white; box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 2px rgba(59,130,246,0.3);
             background-size: cover; background-position: center; position: relative;
+            animation: markerPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
+        
+        @keyframes markerPop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+        
         .user-marker::after {
-            content: ''; position: absolute; bottom: -20px; left: 50%;
+            content: ''; position: absolute; bottom: -24px; left: 50%;
             transform: translateX(-50%); width: 0; height: 0;
-            border-left: 10px solid transparent; border-right: 10px solid transparent;
-            border-top: 20px solid white; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+            border-left: 13px solid transparent; border-right: 13px solid transparent;
+            border-top: 24px solid white; filter: drop-shadow(0 3px 8px rgba(0,0,0,0.25));
         }
+        
         .pulse-ring {
             position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            background: rgba(59, 130, 246, 0.3); animation: pulse 2s infinite;
+            background: rgba(59, 130, 246, 0.5); animation: pulse 2.5s ease-out infinite;
         }
+        
         @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(2); opacity: 0; }
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(2.8); opacity: 0; }
         }
+        
         .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(8px); z-index: 5000;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+            backdrop-filter: blur(14px); z-index: 5000;
             display: flex; align-items: center; justify-content: center;
+            animation: fadeIn 0.3s ease-out;
         }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
         .search-box {
-            position: absolute; top: 16px; left: 16px; right: 16px; z-index: 1000;
-            background: white; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-            padding: 16px;
+            position: absolute; top: 20px; left: 16px; right: 16px; z-index: 1000;
+            background: white; border-radius: 20px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+            padding: 20px; backdrop-filter: blur(10px);
         }
+        
         .fab {
-            position: absolute; right: 16px; width: 56px; height: 56px;
-            background: white; border-radius: 50%; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            position: absolute; right: 20px; width: 60px; height: 60px;
+            background: white; border-radius: 50%; 
+            box-shadow: 0 6px 20px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08);
             display: flex; align-items: center; justify-content: center; z-index: 1000;
-            cursor: pointer; transition: all 0.2s;
+            cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .fab:active { transform: scale(0.9); }
-        .fab-3d { bottom: 90px; }
-        .fab-loc { bottom: 160px; }
+        
+        .fab:hover { transform: scale(1.08); box-shadow: 0 8px 28px rgba(0,0,0,0.22); }
+        .fab:active { transform: scale(0.95); }
+        .fab-3d { bottom: 100px; }
+        .fab-loc { bottom: 180px; }
+        .fab-report { bottom: 260px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        .fab-report i { color: white; }
+        
         .bottom-sheet {
             position: absolute; bottom: 0; left: 0; right: 0;
-            background: white; border-radius: 24px 24px 0 0;
-            box-shadow: 0 -4px 24px rgba(0,0,0,0.15); z-index: 1001;
-            transform: translateY(100%); transition: transform 0.3s ease-out;
-            max-height: 75vh; overflow-y: auto;
+            background: white; border-radius: 28px 28px 0 0;
+            box-shadow: 0 -8px 40px rgba(0,0,0,0.15); z-index: 1001;
+            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 80vh; overflow-y: auto;
         }
+        
         .bottom-sheet.active { transform: translateY(0); }
+        
         .input-row {
-            display: flex; align-items: center; background: #f3f4f6;
-            border-radius: 12px; padding: 12px; position: relative;
+            display: flex; align-items: center; background: #f8fafc;
+            border-radius: 14px; padding: 14px 16px; position: relative;
+            transition: all 0.2s; border: 2px solid transparent;
         }
+        
+        .input-row:focus-within { background: white; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        
         .input-row input {
             background: transparent; width: 100%; outline: none;
-            font-size: 15px; margin-left: 10px; border: none;
+            font-size: 15px; margin-left: 12px; border: none; color: #1e293b;
+            font-weight: 500;
         }
+        
+        .input-row input::placeholder { color: #94a3b8; }
+        
         .suggestions-box {
-            position: absolute; top: 100%; left: 0; right: 0;
-            background: white; border-radius: 12px; margin-top: 8px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1); max-height: 240px;
-            overflow-y: auto; z-index: 1002; display: none;
+            position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+            background: white; border-radius: 16px; margin-top: 4px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+            max-height: 320px; overflow-y: auto; z-index: 1002; display: none;
         }
-        .suggestions-box.show { display: block; }
+        
+        .suggestions-box.show { display: block; animation: slideDown 0.3s ease-out; }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
         .suggestion-item {
-            padding: 14px; border-bottom: 1px solid #f3f4f6;
-            cursor: pointer; display: flex; align-items: center; gap: 12px;
-            transition: background 0.15s;
+            padding: 16px 18px; border-bottom: 1px solid #f1f5f9;
+            cursor: pointer; display: flex; align-items: center; gap: 14px;
+            transition: all 0.15s;
         }
-        .suggestion-item:hover { background: #f9fafb; }
+        
+        .suggestion-item:hover { background: #f8fafc; }
+        .suggestion-item:active { background: #f1f5f9; }
+        
         .transport-option {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 14px; border-radius: 12px; border: 2px solid transparent;
+            padding: 16px 18px; border-radius: 14px; border: 2px solid #e2e8f0;
             cursor: pointer; transition: all 0.2s;
         }
-        .transport-option:hover { background: #f9fafb; }
-        .transport-option.selected { background: #f3f4f6; border-color: #000; }
-        .photo-preview {
-            width: 100px; height: 100px; border-radius: 12px;
-            object-fit: cover; cursor: pointer; border: 2px solid #e5e7eb;
+        
+        .transport-option:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .transport-option.selected { 
+            background: #eff6ff; border-color: #3b82f6; 
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
         }
+        
         .profile-pic-upload {
-            width: 120px; height: 120px; border-radius: 50%;
-            border: 4px dashed #d1d5db; display: flex;
+            width: 130px; height: 130px; border-radius: 50%;
+            border: 4px dashed #cbd5e1; display: flex;
             align-items: center; justify-content: center; cursor: pointer;
-            background: #f9fafb; transition: all 0.2s; overflow: hidden;
+            background: #f8fafc; transition: all 0.3s; overflow: hidden;
+            position: relative;
         }
-        .profile-pic-upload:hover { border-color: #3b82f6; }
+        
+        .profile-pic-upload:hover { border-color: #3b82f6; background: #eff6ff; }
         .profile-pic-upload img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .photo-preview {
+            width: 120px; height: 120px; border-radius: 16px;
+            object-fit: cover; cursor: pointer; border: 3px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+        
+        .photo-preview:hover { border-color: #3b82f6; transform: scale(1.05); }
+        
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px; height: 24px;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Estilos para galería de fotos */
+        .place-gallery {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 8px; margin: 12px 0;
+        }
+        
+        .place-gallery img {
+            width: 100%; height: 80px; object-fit: cover;
+            border-radius: 8px; cursor: pointer; transition: all 0.2s;
+        }
+        
+        .place-gallery img:hover { transform: scale(1.05); opacity: 0.9; }
+        
+        .review-item {
+            padding: 12px; background: #f8fafc; border-radius: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .stars { color: #fbbf24; font-size: 14px; }
+        
+        /* Scrollbar personalizado */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="bg-gray-50">
     <div id="map"></div>
 
+    <!-- Modal de Términos y Condiciones -->
     <div id="terms-modal" class="modal-overlay">
-        <div class="bg-white rounded-3xl p-8 max-w-md w-11/12 shadow-2xl">
+        <div class="modal-content bg-white rounded-3xl p-8 max-w-md w-11/12 shadow-2xl">
             <div class="text-center mb-6">
-                <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-                    <span class="text-4xl">🛡️</span>
+                <div class="w-24 h-24 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-full mx-auto mb-5 flex items-center justify-center shadow-lg">
+                    <span class="text-5xl">🛡️</span>
                 </div>
-                <h2 class="text-2xl font-bold text-gray-900">Bienvenido a Zeta</h2>
-                <p class="text-gray-600 mt-2">Tu seguridad es nuestra prioridad</p>
+                <h2 class="text-3xl font-black text-gray-900 mb-2">Bienvenido a Zeta</h2>
+                <p class="text-gray-600 text-lg">Tu seguridad es nuestra prioridad</p>
             </div>
-            <div class="bg-gray-50 rounded-2xl p-4 max-h-64 overflow-y-auto mb-6 text-sm">
-                <h3 class="font-bold mb-2">Términos y Condiciones</h3>
-                <p class="text-gray-700 mb-3">Al usar Zeta, aceptas:</p>
-                <ul class="space-y-2 text-gray-600">
-                    <li>✓ Compartir tu ubicación para mejores rutas</li>
-                    <li>✓ Recibir alertas de seguridad en tiempo real</li>
-                    <li>✓ Contribuir con reportes verificados</li>
-                    <li>✓ Uso responsable de la información</li>
-                    <li>✓ Política de privacidad y datos</li>
+            <div class="bg-gray-50 rounded-2xl p-5 max-h-72 overflow-y-auto mb-6 text-sm">
+                <h3 class="font-bold text-lg mb-3 text-gray-900">Términos y Condiciones</h3>
+                <p class="text-gray-700 mb-4">Al usar Zeta, aceptas:</p>
+                <ul class="space-y-3 text-gray-600">
+                    <li class="flex items-start gap-2">
+                        <span class="text-green-600 text-xl">✓</span>
+                        <span>Compartir tu ubicación para calcular rutas seguras personalizadas</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-green-600 text-xl">✓</span>
+                        <span>Recibir alertas de seguridad en tiempo real de tu área</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-green-600 text-xl">✓</span>
+                        <span>Contribuir con reportes verificados y responsables</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-green-600 text-xl">✓</span>
+                        <span>Uso ético y responsable de la información compartida</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-green-600 text-xl">✓</span>
+                        <span>Política de privacidad y protección de datos personales</span>
+                    </li>
                 </ul>
-                <p class="mt-4 text-xs text-gray-500">
-                    Zeta utiliza datos de ubicación para calcular rutas seguras. 
-                    Tu información se maneja de forma confidencial según nuestras políticas.
+                <p class="mt-5 text-xs text-gray-500 leading-relaxed">
+                    Zeta utiliza tu ubicación GPS para calcular las rutas más seguras según 
+                    datos verificados de seguridad pública. Tu información personal se maneja 
+                    de forma confidencial y nunca se comparte con terceros.
                 </p>
             </div>
-            <button onclick="acceptTerms()" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all">
+            <button onclick="acceptTerms()" class="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]">
                 Aceptar y Continuar
             </button>
         </div>
     </div>
 
+    <!-- Modal de Registro -->
     <div id="register-modal" class="modal-overlay hidden">
-        <div class="bg-white rounded-3xl p-8 max-w-md w-11/12 shadow-2xl">
-            <h2 class="text-2xl font-bold text-center mb-6">Crea tu Cuenta</h2>
+        <div class="modal-content bg-white rounded-3xl p-8 max-w-md w-11/12 shadow-2xl">
+            <h2 class="text-3xl font-black text-center mb-2 text-gray-900">Crea tu Cuenta</h2>
+            <p class="text-center text-gray-600 mb-6">Únete a la comunidad más segura</p>
+            
             <div class="flex flex-col items-center mb-6">
                 <label for="profile-pic-input" class="profile-pic-upload">
-                    <div id="profile-preview" class="text-center">
-                        <i data-lucide="camera" class="w-12 h-12 text-gray-400 mx-auto mb-2"></i>
-                        <p class="text-xs text-gray-500">Foto de perfil</p>
+                    <div id="profile-preview" class="text-center w-full h-full flex items-center justify-center flex-col">
+                        <i data-lucide="camera" class="w-14 h-14 text-gray-400 mb-2"></i>
+                        <p class="text-xs text-gray-500 font-medium">Añadir foto</p>
                     </div>
                 </label>
                 <input type="file" id="profile-pic-input" accept="image/*" class="hidden" onchange="previewProfilePic(event)">
+                <p class="text-xs text-gray-500 mt-2">Tu foto aparecerá en el mapa como Life360</p>
             </div>
-            <input type="text" id="reg-name" placeholder="Nombre completo" class="w-full p-4 border rounded-xl mb-4 focus:ring-2 focus:ring-blue-500 outline-none">
-            <input type="email" id="reg-email" placeholder="Correo electrónico" class="w-full p-4 border rounded-xl mb-6 focus:ring-2 focus:ring-blue-500 outline-none">
-            <button onclick="registerUser()" class="w-full bg-black text-white py-4 rounded-xl font-bold shadow-lg hover:bg-gray-800 transition-all mb-3">
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre completo</label>
+                    <input type="text" id="reg-name" placeholder="Juan Pérez" 
+                        class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Correo electrónico</label>
+                    <input type="email" id="reg-email" placeholder="juan@email.com" 
+                        class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900">
+                </div>
+            </div>
+            
+            <button onclick="registerUser()" class="w-full bg-black text-white py-4 rounded-xl font-bold shadow-lg hover:bg-gray-800 transition-all mt-6 hover:scale-[1.02]">
                 Registrarse
             </button>
-            <button onclick="skipRegistration()" class="w-full text-gray-500 py-3 text-sm">
+            <button onclick="skipRegistration()" class="w-full text-gray-500 py-3 text-sm mt-3 hover:text-gray-700 transition-colors">
                 Continuar sin cuenta
             </button>
         </div>
     </div>
 
-    <div id="report-modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[3000] backdrop-blur-sm">
-        <div class="bg-white p-6 rounded-2xl w-11/12 max-w-md shadow-2xl">
-            <h3 class="text-xl font-bold mb-4">Reportar Incidente</h3>
-            <textarea id="report-desc" class="w-full p-3 border rounded-xl text-sm mb-3" rows="3" placeholder="Describe lo que sucede (mínimo 10 caracteres)..."></textarea>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Adjuntar foto (opcional)</label>
+    <!-- Modal de Reportar Incidente -->
+    <div id="report-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-[3000] backdrop-blur-sm">
+        <div class="bg-white p-7 rounded-3xl w-11/12 max-w-md shadow-2xl">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="text-2xl font-black text-gray-900">Reportar Incidente</h3>
+                <button onclick="closeReportModal()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                    <i data-lucide="x" class="w-6 h-6 text-gray-600"></i>
+                </button>
+            </div>
+            
+            <textarea id="report-desc" 
+                class="w-full p-4 border-2 border-gray-200 rounded-xl text-sm mb-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
+                rows="4" 
+                placeholder="Describe el incidente con detalle (mínimo 10 caracteres)..."></textarea>
+            
+            <div class="mb-5">
+                <label class="block text-sm font-bold text-gray-700 mb-3">Nivel de riesgo</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="setRiskLevel('low', this)" 
+                        class="risk-btn p-4 border-2 rounded-xl text-sm font-bold text-green-700 border-green-400 hover:bg-green-50 transition-all">
+                        <div class="text-2xl mb-1">🟢</div>
+                        Bajo
+                    </button>
+                    <button onclick="setRiskLevel('medium', this)" 
+                        class="risk-btn p-4 border-2 rounded-xl text-sm font-bold text-yellow-700 border-yellow-400 hover:bg-yellow-50 transition-all">
+                        <div class="text-2xl mb-1">🟡</div>
+                        Medio
+                    </button>
+                    <button onclick="setRiskLevel('high', this)" 
+                        class="risk-btn p-4 border-2 rounded-xl text-sm font-bold text-red-700 border-red-400 hover:bg-red-50 transition-all">
+                        <div class="text-2xl mb-1">🔴</div>
+                        Alto
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mb-5">
+                <label class="block text-sm font-bold text-gray-700 mb-3">Evidencia fotográfica (opcional)</label>
                 <input type="file" id="report-photo" accept="image/*" class="w-full text-sm" onchange="previewReportPhoto(event)">
-                <div id="report-photo-preview" class="mt-2 hidden">
+                <div id="report-photo-preview" class="mt-3 hidden">
                     <img id="report-photo-img" class="photo-preview">
                 </div>
             </div>
-            <div class="grid grid-cols-3 gap-2 mb-4">
-                <button onclick="setRiskLevel('low', this)" class="risk-btn p-3 border-2 rounded-lg text-xs font-bold text-green-600 border-green-500 hover:bg-green-50">Bajo</button>
-                <button onclick="setRiskLevel('medium', this)" class="risk-btn p-3 border-2 rounded-lg text-xs font-bold text-yellow-600 border-yellow-500 hover:bg-yellow-50">Medio</button>
-                <button onclick="setRiskLevel('high', this)" class="risk-btn p-3 border-2 rounded-lg text-xs font-bold text-red-600 border-red-500 hover:bg-red-50">Alto</button>
-            </div>
+            
             <div class="flex gap-3">
-                <button onclick="closeReportModal()" class="flex-1 py-3 text-gray-600 font-bold bg-gray-100 rounded-xl hover:bg-gray-200">Cancelar</button>
-                <button onclick="submitReport()" class="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg hover:bg-red-700">Enviar Reporte</button>
+                <button onclick="closeReportModal()" 
+                    class="flex-1 py-4 text-gray-700 font-bold bg-gray-100 rounded-xl hover:bg-gray-200 transition-all">
+                    Cancelar
+                </button>
+                <button onclick="submitReport()" 
+                    class="flex-1 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]">
+                    Enviar Reporte
+                </button>
             </div>
         </div>
     </div>
+
+    <!-- Barra de búsqueda -->
     <div class="search-box hidden" id="search-box">
-        <div class="flex items-center justify-between mb-3">
-            <h3 class="font-bold text-lg">Planea tu ruta</h3>
-            <button onclick="toggleMenu()" class="p-2 hover:bg-gray-100 rounded-full">
-                <i data-lucide="more-vertical" class="w-5 h-5"></i>
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-black text-xl text-gray-900">Planea tu ruta</h3>
+            <button onclick="toggleMenu()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <i data-lucide="more-vertical" class="w-6 h-6 text-gray-700"></i>
             </button>
         </div>
+        
         <div class="space-y-3">
             <div class="input-row">
-                <div class="w-3 h-3 bg-blue-600 rounded-full"></div>
-                <input type="text" id="origin" placeholder="Tu ubicación" onfocus="showOriginSuggestions()" oninput="searchOrigin(this.value)">
+                <div class="w-4 h-4 bg-blue-600 rounded-full flex-shrink-0"></div>
+                <input type="text" id="origin" placeholder="Tu ubicación" 
+                    onfocus="showOriginSuggestions()" 
+                    oninput="searchOrigin(this.value)">
                 <div id="origin-suggestions" class="suggestions-box"></div>
             </div>
+            
             <div class="input-row">
-                <div class="w-3 h-3 bg-red-600 rounded-sm"></div>
-                <input type="text" id="destination" placeholder="¿A dónde vas?" onfocus="showDestinationSuggestions()" oninput="searchDestination(this.value)">
+                <div class="w-4 h-4 bg-red-600 rounded flex-shrink-0"></div>
+                <input type="text" id="destination" placeholder="¿A dónde vas?" 
+                    onfocus="showDestinationSuggestions()" 
+                    oninput="searchDestination(this.value)">
                 <div id="dest-suggestions" class="suggestions-box"></div>
             </div>
-            <button onclick="calculateRoute()" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3.5 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all">
+            
+            <button onclick="calculateRoute()" 
+                class="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] flex items-center justify-center gap-2">
+                <i data-lucide="navigation" class="w-5 h-5"></i>
                 Buscar Ruta Segura
             </button>
         </div>
     </div>
 
-    <div id="app-menu" class="fixed top-16 right-4 w-56 bg-white rounded-2xl shadow-2xl z-[2000] hidden overflow-hidden">
-        <div onclick="showProfile()" class="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center text-sm border-b">
-            <i data-lucide="user" class="w-4 h-4 mr-3 text-blue-600"></i>
-            <span class="font-medium">Mi Perfil</span>
+    <!-- Menú de opciones -->
+    <div id="app-menu" class="fixed top-20 right-4 w-64 bg-white rounded-2xl shadow-2xl z-[2000] hidden overflow-hidden">
+        <div onclick="showProfile()" class="px-5 py-4 hover:bg-gray-50 cursor-pointer flex items-center text-sm border-b transition-colors">
+            <i data-lucide="user" class="w-5 h-5 mr-3 text-blue-600"></i>
+            <span class="font-semibold text-gray-900">Mi Perfil</span>
         </div>
-        <div onclick="openReportModal()" class="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center text-sm border-b">
-            <i data-lucide="alert-triangle" class="w-4 h-4 mr-3 text-red-600"></i>
-            <span class="font-medium">Reportar Incidente</span>
+        <div onclick="openReportModal()" class="px-5 py-4 hover:bg-gray-50 cursor-pointer flex items-center text-sm border-b transition-colors">
+            <i data-lucide="alert-triangle" class="w-5 h-5 mr-3 text-red-600"></i>
+            <span class="font-semibold text-gray-900">Reportar Incidente</span>
         </div>
-        <div onclick="toggle3DMode()" class="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center text-sm border-b">
-            <i data-lucide="compass" class="w-4 h-4 mr-3 text-purple-600"></i>
-            <span class="font-medium">Modo 3D</span>
+        <div onclick="toggle3DMode()" class="px-5 py-4 hover:bg-gray-50 cursor-pointer flex items-center text-sm border-b transition-colors">
+            <i data-lucide="box" class="w-5 h-5 mr-3 text-purple-600"></i>
+            <span class="font-semibold text-gray-900">Modo 3D</span>
         </div>
-        <div onclick="viewReports()" class="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center text-sm">
-            <i data-lucide="map-pin" class="w-4 h-4 mr-3 text-orange-600"></i>
-            <span class="font-medium">Ver Reportes</span>
+        <div onclick="viewReports()" class="px-5 py-4 hover:bg-gray-50 cursor-pointer flex items-center text-sm transition-colors">
+            <i data-lucide="map-pin" class="w-5 h-5 mr-3 text-orange-600"></i>
+            <span class="font-semibold text-gray-900">Ver Reportes</span>
         </div>
     </div>
 
-    <div class="fab fab-3d" onclick="toggle3DMode()">
+    <!-- FABs (Floating Action Buttons) -->
+    <div class="fab fab-report" onclick="openReportModal()" title="Reportar incidente">
+        <i data-lucide="alert-triangle" class="w-7 h-7"></i>
+    </div>
+    <div class="fab fab-3d" onclick="toggle3DMode()" title="Modo 3D">
         <i data-lucide="box" class="w-6 h-6 text-gray-700"></i>
     </div>
-    <div class="fab fab-loc" onclick="centerOnUser()">
+    <div class="fab fab-loc" onclick="centerOnUser()" title="Mi ubicación">
         <i data-lucide="navigation" class="w-6 h-6 text-blue-600"></i>
     </div>
 
+    <!-- Bottom Sheet de resultados -->
     <div id="bottom-sheet" class="bottom-sheet">
-        <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto my-4 cursor-pointer" onclick="closeBottomSheet()"></div>
-        <div class="p-6">
-            <div class="flex justify-between items-center mb-5">
+        <div class="w-14 h-1.5 bg-gray-300 rounded-full mx-auto my-5 cursor-pointer" onclick="closeBottomSheet()"></div>
+        <div class="p-7">
+            <div class="flex justify-between items-center mb-6">
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-900" id="route-time">-- min</h2>
-                    <p class="text-sm text-gray-500 flex items-center mt-1">
-                        <i data-lucide="map" class="w-4 h-4 mr-1"></i>
+                    <h2 class="text-3xl font-black text-gray-900" id="route-time">-- min</h2>
+                    <p class="text-sm text-gray-600 flex items-center mt-2 font-medium">
+                        <i data-lucide="map" class="w-4 h-4 mr-2"></i>
                         <span id="route-distance">-- km</span>
                     </p>
                 </div>
-                <span id="risk-badge" class="px-3 py-2 rounded-lg text-xs font-bold uppercase">--</span>
+                <span id="risk-badge" class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wide">--</span>
             </div>
-            <div id="transport-list" class="space-y-2 mb-5"></div>
-            <button onclick="startTrip()" class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg text-lg hover:shadow-xl transition-all">
-                Iniciar Viaje
+            
+            <div id="transport-list" class="space-y-3 mb-6"></div>
+            
+            <button onclick="startTrip()" 
+                class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-5 rounded-xl font-black shadow-lg text-lg hover:shadow-xl transition-all hover:scale-[1.02] flex items-center justify-center gap-3">
+                <i data-lucide="play-circle" class="w-6 h-6"></i>
+                Iniciar Viaje Seguro
             </button>
         </div>
     </div>
     <script>
+        // ========== CONFIGURACIÓN ==========
         const API_URL = 'https://zeta-2.onrender.com/api';
+        const GOOGLE_PLACES_PROXY = 'https://places.googleapis.com/v1/places:searchNearby';
         
-        let map, routeLayer, userMarker;
-        const CENTER = [28.6353, -106.0886];
+        let map, routeLayer, userMarker, userLocationWatch;
+        const CENTER = [28.6353, -106.0886]; // Centro de Chihuahua
         let currentUser = null;
         let userCoords = null;
         let selectedRiskLevel = 'low';
@@ -268,7 +466,9 @@
         let searchTimeout = null;
         let selectedOriginCoords = null;
         let selectedDestCoords = null;
+        let placesCache = {};
 
+        // ========== INICIALIZACIÓN ==========
         window.onload = function() {
             checkUserSession();
             lucide.createIcons();
@@ -277,6 +477,7 @@
         function checkUserSession() {
             const savedUser = localStorage.getItem('zeta_user');
             const termsAccepted = localStorage.getItem('zeta_terms_accepted');
+            
             if (!termsAccepted) {
                 document.getElementById('terms-modal').style.display = 'flex';
             } else if (!savedUser) {
@@ -299,10 +500,15 @@
         function previewProfilePic(event) {
             const file = event.target.files[0];
             if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('La imagen es muy grande. Máximo 5MB.');
+                    return;
+                }
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     profilePhotoBase64 = e.target.result;
-                    document.getElementById('profile-preview').innerHTML = `<img src="${profilePhotoBase64}" class="w-full h-full object-cover">`;
+                    document.getElementById('profile-preview').innerHTML = 
+                        `<img src="${profilePhotoBase64}" class="w-full h-full object-cover rounded-full">`;
                 };
                 reader.readAsDataURL(file);
             }
@@ -311,37 +517,57 @@
         async function registerUser() {
             const name = document.getElementById('reg-name').value.trim();
             const email = document.getElementById('reg-email').value.trim();
-            if (!name || !email) {
-                alert('Por favor completa todos los campos');
+            
+            if (!name || name.length < 2) {
+                alert('Por favor ingresa tu nombre completo');
                 return;
             }
-            if (!email.includes('@')) {
-                alert('Email inválido');
+            
+            if (!email || !email.includes('@') || !email.includes('.')) {
+                alert('Por favor ingresa un email válido');
                 return;
             }
+            
+            showLoading('Registrando...');
+            
             try {
                 const response = await fetch(`${API_URL}/auth/register`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({name: name, email: email, photo: profilePhotoBase64, accepted_terms: true})
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        photo: profilePhotoBase64,
+                        accepted_terms: true
+                    })
                 });
+                
                 const data = await response.json();
+                hideLoading();
+                
                 if (data.status === 'success') {
                     currentUser = data.user;
                     localStorage.setItem('zeta_user', JSON.stringify(currentUser));
                     document.getElementById('register-modal').style.display = 'none';
                     startApp();
                 } else {
-                    alert(data.message || 'Error al registrar');
+                    alert(data.message || 'Error al registrar. Intenta nuevamente.');
                 }
             } catch (error) {
+                hideLoading();
                 console.error('Error:', error);
-                alert('Error de conexión. Verifica tu internet.');
+                alert('Error de conexión. Verifica tu internet y vuelve a intentar.');
             }
         }
 
         function skipRegistration() {
-            currentUser = {id: 'guest_' + Date.now(), name: 'Invitado', email: 'guest@zeta.app', photo: ''};
+            const guestId = 'guest_' + Date.now();
+            currentUser = {
+                id: guestId,
+                name: 'Invitado',
+                email: 'guest@zeta.app',
+                photo: ''
+            };
             localStorage.setItem('zeta_user', JSON.stringify(currentUser));
             document.getElementById('register-modal').style.display = 'none';
             startApp();
@@ -352,110 +578,365 @@
             initMap();
             requestUserLocation();
             loadReports();
+            loadPlaces();
         }
-        function initMap() {
-            map = L.map('map', { zoomControl: false }).setView(CENTER, 13);
+
+        // ========== INICIALIZAR MAPA ==========
+        async function initMap() {
+            map = L.map('map', { 
+                zoomControl: false,
+                attributionControl: false
+            }).setView(CENTER, 13);
+            
+            // Mapa base moderno
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '©OpenStreetMap, ©CartoDB', maxZoom: 19
+                maxZoom: 19,
+                attribution: '©OpenStreetMap ©CartoDB'
             }).addTo(map);
-
-            fetch(`${API_URL}/zones`).then(r => r.json()).then(data => {
-                data.zones.forEach(zone => {
-                    L.circle([zone.lat, zone.lon], {
-                        color: zone.color, fillColor: zone.color, fillOpacity: 0.2,
-                        radius: zone.radius_km * 1000, weight: 2
-                    }).addTo(map).bindPopup(`<div class="p-3"><h3 class="font-bold text-base">${zone.name}</h3><p class="text-sm text-gray-600">Nivel: ${zone.level}</p></div>`);
-                });
-            }).catch(err => console.error('Error loading zones:', err));
-
-            fetch(`${API_URL}/points`).then(r => r.json()).then(places => {
-                places.forEach(place => {
-                    const icons = {'Turismo': '🏛️', 'Cultura': '🎨', 'Recreación': '🌳', 'Compras': '🛍️', 'Educación': '🎓', 'Salud': '🏥', 'Restaurante': '🍽️', 'Hotel': '🏨', 'Transporte': '🚌', 'Gobierno': '🏛️', 'Servicios': '🏦'};
-                    const icon = L.divIcon({className: 'text-2xl', html: icons[place.type] || '📍', iconSize: [28, 28]});
-                    L.marker([place.coords[0], place.coords[1]], {icon: icon}).addTo(map).bindPopup(`<div class="p-3"><h3 class="font-bold text-base">${place.name}</h3><p class="text-sm text-gray-500 mb-2">${place.type}</p><button onclick="setDestinationFromMap('${place.name}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold w-full hover:bg-blue-700">Ir aquí</button></div>`);
-                });
-            }).catch(err => console.error('Error loading places:', err));
+            
+            // Control de zoom personalizado
+            L.control.zoom({
+                position: 'bottomleft'
+            }).addTo(map);
+            
+            // Cargar zonas de riesgo
+            loadRiskZones();
         }
 
+        async function loadRiskZones() {
+            try {
+                const response = await fetch(`${API_URL}/zones`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    data.zones.forEach(zone => {
+                        const circle = L.circle([zone.lat, zone.lon], {
+                            color: zone.color,
+                            fillColor: zone.color,
+                            fillOpacity: 0.2,
+                            radius: zone.radius_km * 1000,
+                            weight: 2
+                        }).addTo(map);
+                        
+                        const icons = {
+                            'critical': '🚨',
+                            'high': '⚠️',
+                            'medium': '⚡',
+                            'low': '✅'
+                        };
+                        
+                        circle.bindPopup(`
+                            <div class="p-4">
+                                <div class="text-2xl mb-2">${icons[zone.level]}</div>
+                                <h3 class="font-black text-lg text-gray-900">${zone.name}</h3>
+                                <p class="text-sm text-gray-600 mt-1">Nivel de riesgo: <span class="font-bold">${zone.level}</span></p>
+                                <p class="text-xs text-gray-500 mt-2">Radio: ${zone.radius_km} km</p>
+                            </div>
+                        `);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading zones:', error);
+            }
+        }
+
+        async function loadPlaces() {
+            try {
+                const response = await fetch(`${API_URL}/points`);
+                const places = await response.json();
+                
+                places.forEach(place => {
+                    const icons = {
+                        'Turismo': '🏛️',
+                        'Cultura': '🎨',
+                        'Recreación': '🌳',
+                        'Compras': '🛍️',
+                        'Educación': '🎓',
+                        'Salud': '🏥',
+                        'Restaurante': '🍽️',
+                        'Hotel': '🏨'
+                    };
+                    
+                    const icon = L.divIcon({
+                        className: 'custom-icon',
+                        html: `<div style="font-size: 28px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">${icons[place.type] || '📍'}</div>`,
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 16]
+                    });
+                    
+                    const marker = L.marker([place.coords[0], place.coords[1]], { icon: icon }).addTo(map);
+                    
+                    marker.on('click', () => showPlaceDetails(place));
+                });
+            } catch (error) {
+                console.error('Error loading places:', error);
+            }
+        }
+
+        // ========== MOSTRAR DETALLES DEL LUGAR (CON FOTOS Y RESEÑAS ESTILO GOOGLE MAPS) ==========
+        async function showPlaceDetails(place) {
+            const popup = L.popup({
+                maxWidth: 320,
+                className: 'custom-popup'
+            });
+            
+            // Generar estrellas
+            const stars = '⭐'.repeat(Math.floor(place.rating || 4));
+            
+            // Simular fotos del lugar (en producción usarías Google Places API)
+            const photoUrls = await fetchPlacePhotos(place);
+            
+            const photosHTML = photoUrls.length > 0 ? `
+                <div class="place-gallery">
+                    ${photoUrls.map(url => `<img src="${url}" onclick="viewFullImage('${url}')" alt="${place.name}">`).join('')}
+                </div>
+            ` : '';
+            
+            // Obtener reseñas simuladas (en producción usarías Google Places API)
+            const reviews = getPlaceReviews(place.name);
+            
+            const reviewsHTML = reviews.length > 0 ? `
+                <div class="mt-3">
+                    <h4 class="font-bold text-sm text-gray-900 mb-2">Reseñas recientes</h4>
+                    ${reviews.map(review => `
+                        <div class="review-item">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-semibold text-sm text-gray-900">${review.author}</span>
+                                <span class="stars text-xs">${'⭐'.repeat(review.rating)}</span>
+                            </div>
+                            <p class="text-xs text-gray-600">${review.text}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '';
+            
+            popup.setLatLng([place.coords[0], place.coords[1]])
+                .setContent(`
+                    <div class="p-4">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h3 class="font-black text-lg text-gray-900">${place.name}</h3>
+                                <p class="text-sm text-gray-600">${place.type}</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="stars">${stars}</div>
+                                <p class="text-xs text-gray-500">${place.rating || 4.0}</p>
+                            </div>
+                        </div>
+                        
+                        ${photosHTML}
+                        ${reviewsHTML}
+                        
+                        <button onclick="setDestinationFromMap('${place.name}', [${place.coords}])" 
+                            class="w-full bg-blue-600 text-white px-4 py-3 rounded-xl text-sm font-bold mt-4 hover:bg-blue-700 transition-all shadow-lg">
+                            <i data-lucide="navigation" class="w-4 h-4 inline mr-2"></i>
+                            Ir a este lugar
+                        </button>
+                    </div>
+                `)
+                .openOn(map);
+            
+            lucide.createIcons();
+        }
+
+        // Obtener fotos del lugar (simulado - en producción usar Google Places API)
+        async function fetchPlacePhotos(place) {
+            // Aquí irían las llamadas reales a Google Places API
+            // Por ahora retornamos placeholders realistas
+            const placePhotos = {
+                'Catedral de Chihuahua': [
+                    'https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=300',
+                    'https://images.unsplash.com/photo-1605106251963-ceb583fc26c0?w=300',
+                    'https://images.unsplash.com/photo-1552755626-e820b5d95031?w=300'
+                ],
+                'Quinta Gameros': [
+                    'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=300',
+                    'https://images.unsplash.com/photo-1577495508048-b635879837f1?w=300',
+                    'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=300'
+                ]
+            };
+            
+            return placePhotos[place.name] || [
+                'https://images.unsplash.com/photo-1555899434-94d1526a7882?w=300'
+            ];
+        }
+
+        // Obtener reseñas del lugar
+        function getPlaceReviews(placeName) {
+            const reviewsDB = {
+                'Catedral de Chihuahua': [
+                    { author: 'María G.', rating: 5, text: 'Hermosa arquitectura, vale la pena visitarla.' },
+                    { author: 'Carlos M.', rating: 4, text: 'Muy bonito lugar histórico en el centro.' }
+                ],
+                'Fashion Mall': [
+                    { author: 'Ana L.', rating: 5, text: 'Excelente centro comercial, muy completo.' },
+                    { author: 'José R.', rating: 4, text: 'Buena variedad de tiendas y restaurantes.' }
+                ],
+                'Quinta Gameros': [
+                    { author: 'Roberto S.', rating: 5, text: 'Una joya arquitectónica de Chihuahua.' },
+                    { author: 'Laura P.', rating: 5, text: 'Impresionante museo, muy bien conservado.' }
+                ]
+            };
+            
+            return reviewsDB[placeName] || [
+                { author: 'Usuario', rating: 4, text: 'Buen lugar para visitar.' }
+            ];
+        }
+
+        function viewFullImage(url) {
+            window.open(url, '_blank');
+        }
+        // ========== GEOLOCALIZACIÓN PRECISA ==========
         function requestUserLocation() {
             if ("geolocation" in navigator) {
+                showLoading('Obteniendo ubicación...');
+                
                 navigator.geolocation.getCurrentPosition(
                     async (position) => {
-                        userCoords = {lat: position.coords.latitude, lon: position.coords.longitude};
+                        userCoords = {
+                            lat: position.coords.latitude,
+                            lon: position.coords.longitude,
+                            accuracy: position.coords.accuracy
+                        };
+                        
+                        hideLoading();
+                        
+                        // Geocodificación inversa
                         try {
                             const response = await fetch(`${API_URL}/reverse_geocode`, {
-                                method: 'POST', headers: {'Content-Type': 'application/json'},
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
                                 body: JSON.stringify(userCoords)
                             });
+                            
                             const data = await response.json();
                             if (data.status === 'success') {
                                 document.getElementById('origin').value = data.address;
                                 document.getElementById('origin').placeholder = data.address;
                             }
                         } catch (error) {
+                            console.error('Reverse geocoding error:', error);
                             document.getElementById('origin').value = "Mi ubicación";
                         }
+                        
                         updateUserMarker();
+                        map.setView([userCoords.lat, userCoords.lon], 15);
                     },
                     (error) => {
-                        console.log("Geolocalización no disponible:", error);
+                        hideLoading();
+                        console.error("Geolocalización error:", error);
+                        
+                        let errorMsg = 'No se pudo obtener tu ubicación. ';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMsg += 'Por favor permite el acceso a tu ubicación.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMsg += 'La ubicación no está disponible.';
+                                break;
+                            case error.TIMEOUT:
+                                errorMsg += 'La solicitud expiró. Intenta nuevamente.';
+                                break;
+                        }
+                        
+                        alert(errorMsg);
                         document.getElementById('origin').value = "Centro, Chihuahua";
+                        userCoords = { lat: CENTER[0], lon: CENTER[1] };
                     },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
                 );
-                setInterval(() => {
-                    navigator.geolocation.getCurrentPosition(
-                        (pos) => {
-                            userCoords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-                            updateUserMarker();
-                        }, null, { enableHighAccuracy: true, maximumAge: 5000 }
-                    );
-                }, 10000);
+                
+                // Actualización continua de ubicación
+                userLocationWatch = navigator.geolocation.watchPosition(
+                    (position) => {
+                        userCoords = {
+                            lat: position.coords.latitude,
+                            lon: position.coords.longitude,
+                            accuracy: position.coords.accuracy
+                        };
+                        updateUserMarker();
+                    },
+                    null,
+                    {
+                        enableHighAccuracy: true,
+                        maximumAge: 5000,
+                        timeout: 5000
+                    }
+                );
+            } else {
+                alert('Tu navegador no soporta geolocalización.');
+                document.getElementById('origin').value = "Centro, Chihuahua";
             }
         }
 
         function updateUserMarker() {
             if (!userCoords || !map) return;
-            if (userMarker) map.removeLayer(userMarker);
-            const photoUrl = currentUser?.photo || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%233b82f6"/><text x="50" y="65" font-size="50" text-anchor="middle" fill="white">👤</text></svg>';
+            
+            if (userMarker) {
+                map.removeLayer(userMarker);
+            }
+            
+            // Crear marcador estilo Life360 con foto de usuario
+            const photoUrl = currentUser?.photo || 
+                'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="50" fill="%233b82f6"/%3E%3Ctext x="50" y="70" font-size="60" text-anchor="middle" fill="white"%3E👤%3C/text%3E%3C/svg%3E';
+            
             const icon = L.divIcon({
                 className: 'user-marker-container',
-                html: `<div class="pulse-ring"></div><div class="user-marker" style="background-image: url('${photoUrl}')"></div>`,
-                iconSize: [50, 50], iconAnchor: [25, 25]
+                html: `
+                    <div class="pulse-ring"></div>
+                    <div class="user-marker" style="background-image: url('${photoUrl}')"></div>
+                `,
+                iconSize: [56, 56],
+                iconAnchor: [28, 28]
             });
-            userMarker = L.marker([userCoords.lat, userCoords.lon], { icon: icon }).addTo(map).bindPopup(`<div class="p-3 text-center"><p class="font-bold">${currentUser?.name || 'Tú'}</p><p class="text-xs text-gray-500">Tu ubicación actual</p></div>`);
+            
+            userMarker = L.marker([userCoords.lat, userCoords.lon], { icon: icon })
+                .addTo(map)
+                .bindPopup(`
+                    <div class="p-4 text-center">
+                        <div class="w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                            <img src="${photoUrl}" alt="${currentUser?.name}" class="w-full h-full object-cover">
+                        </div>
+                        <p class="font-black text-lg text-gray-900">${currentUser?.name || 'Tú'}</p>
+                        <p class="text-xs text-gray-500 mt-1">Tu ubicación actual</p>
+                        <p class="text-xs text-blue-600 mt-2">Precisión: ${Math.round(userCoords.accuracy || 0)}m</p>
+                    </div>
+                `);
         }
 
         function centerOnUser() {
             if (userCoords) {
-                map.flyTo([userCoords.lat, userCoords.lon], 16);
-                if (userMarker) userMarker.openPopup();
+                map.flyTo([userCoords.lat, userCoords.lon], 17, {
+                    duration: 1.5,
+                    easeLinearity: 0.25
+                });
+                if (userMarker) {
+                    setTimeout(() => userMarker.openPopup(), 1600);
+                }
             } else {
                 requestUserLocation();
             }
         }
 
-        function toggle3DMode() {
-            is3DMode = !is3DMode;
-            document.body.classList.toggle('map-3d-mode');
-            document.getElementById('app-menu').classList.remove('show');
-            if (is3DMode) {
-                map.setZoom(17);
-                setTimeout(() => map.invalidateSize(), 900);
-            } else {
-                map.setZoom(13);
-                setTimeout(() => map.invalidateSize(), 900);
-            }
-        }
+        // ========== BÚSQUEDA DE LUGARES ==========
         function showOriginSuggestions() {
             const box = document.getElementById('origin-suggestions');
             box.innerHTML = `
-                <div class="p-3 bg-gray-50 border-b">
-                    <p class="text-xs font-bold text-gray-500 uppercase">Tu ubicación</p>
+                <div class="p-3 bg-gradient-to-r from-blue-50 to-purple-50 border-b">
+                    <p class="text-xs font-black text-blue-700 uppercase">Tu ubicación</p>
                 </div>
                 <div class="suggestion-item" onclick="useCurrentLocation()">
-                    <i data-lucide="navigation" class="w-5 h-5 text-blue-600"></i>
-                    <span class="text-sm font-medium">Usar ubicación actual</span>
+                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i data-lucide="navigation" class="w-5 h-5 text-blue-600"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-bold text-gray-900">Usar ubicación actual</p>
+                        <p class="text-xs text-gray-500">GPS de alta precisión</p>
+                    </div>
                 </div>
             `;
             box.classList.add('show');
@@ -464,20 +945,33 @@
 
         async function showDestinationSuggestions() {
             const box = document.getElementById('dest-suggestions');
-            box.innerHTML = '<div class="p-3 text-center text-sm text-gray-500">Cargando...</div>';
+            box.innerHTML = '<div class="p-4 text-center"><div class="loading-spinner mx-auto"></div></div>';
             box.classList.add('show');
+            
             try {
                 const response = await fetch(`${API_URL}/points`);
                 const places = await response.json();
-                const popular = places.slice(0, 8);
+                const popular = places.slice(0, 10);
+                
                 box.innerHTML = `
-                    <div class="p-3 bg-gray-50 border-b">
-                        <p class="text-xs font-bold text-gray-500 uppercase">Lugares Populares</p>
+                    <div class="p-3 bg-gradient-to-r from-purple-50 to-pink-50 border-b">
+                        <p class="text-xs font-black text-purple-700 uppercase">Lugares Populares</p>
                     </div>
-                    ${popular.map(p => `<div class="suggestion-item" onclick="selectDestination('${p.name}')"><span class="text-xl">${getPlaceIcon(p.type)}</span><div class="flex-1"><p class="text-sm font-medium">${p.name}</p><p class="text-xs text-gray-500">${p.type}</p></div></div>`).join('')}
+                    ${popular.map(p => `
+                        <div class="suggestion-item" onclick='selectDestinationWithCoords(${JSON.stringify(p)})'>
+                            <div class="text-3xl">${getPlaceIcon(p.type)}</div>
+                            <div class="flex-1">
+                                <p class="text-sm font-bold text-gray-900">${p.name}</p>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <p class="text-xs text-gray-500">${p.type}</p>
+                                    <span class="text-xs text-yellow-600">⭐ ${p.rating || 4.5}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
                 `;
             } catch (error) {
-                box.innerHTML = '<div class="p-3 text-center text-sm text-red-600">Error al cargar lugares</div>';
+                box.innerHTML = '<div class="p-4 text-center text-sm text-red-600">Error al cargar lugares</div>';
             }
         }
 
@@ -486,30 +980,47 @@
                 showOriginSuggestions();
                 return;
             }
+            
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(async () => {
                 const box = document.getElementById('origin-suggestions');
-                box.innerHTML = '<div class="p-3 text-center text-sm text-gray-500">Buscando...</div>';
+                box.innerHTML = '<div class="p-4 text-center"><div class="loading-spinner mx-auto"></div></div>';
                 box.classList.add('show');
+                
                 try {
                     const response = await fetch(`${API_URL}/search_places?q=${encodeURIComponent(val)}`);
                     const suggestions = await response.json();
+                    
                     if (suggestions.length === 0) {
-                        box.innerHTML = `<div class="p-4 text-center"><p class="text-sm text-gray-500 mb-2">No se encontraron resultados para "${val}"</p><p class="text-xs text-gray-400">Intenta con: calle, colonia o nombre de lugar</p></div>`;
+                        box.innerHTML = `
+                            <div class="p-5 text-center">
+                                <p class="text-sm text-gray-600 mb-2">No se encontraron resultados para "<strong>${val}</strong>"</p>
+                                <p class="text-xs text-gray-400">Intenta con: nombre de calle, colonia o lugar conocido</p>
+                            </div>
+                        `;
                     } else {
                         box.innerHTML = `
-                            <div class="p-2 bg-blue-50 border-b">
-                                <p class="text-xs font-bold text-blue-700 uppercase flex items-center gap-2"><span>🔍</span> ${suggestions.length} resultado${suggestions.length > 1 ? 's' : ''}</p>
+                            <div class="p-3 bg-blue-50 border-b flex items-center gap-2">
+                                <span class="text-xl">🔍</span>
+                                <p class="text-xs font-black text-blue-700 uppercase">${suggestions.length} resultado${suggestions.length > 1 ? 's' : ''}</p>
                             </div>
-                            ${suggestions.map(s => `<div class="suggestion-item" onclick='selectOriginWithCoords(${JSON.stringify(s)})'><span class="text-xl">${getIconForType(s.type)}</span><div class="flex-1"><p class="text-sm font-medium">${s.name}</p><p class="text-xs text-gray-500">${s.type}${s.source === 'osm' ? ' • OSM' : ''}</p></div></div>`).join('')}
+                            ${suggestions.map(s => `
+                                <div class="suggestion-item" onclick='selectOriginWithCoords(${JSON.stringify(s)})'>
+                                    <div class="text-2xl">${getIconForType(s.type)}</div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-bold text-gray-900">${s.name}</p>
+                                        <p class="text-xs text-gray-500">${s.type}${s.source === 'osm' ? ' • OpenStreetMap' : ''}</p>
+                                    </div>
+                                </div>
+                            `).join('')}
                         `;
                     }
                     box.classList.add('show');
                 } catch (error) {
-                    console.error('Error:', error);
-                    box.innerHTML = '<div class="p-3 text-center text-sm text-red-600">Error de conexión</div>';
+                    console.error('Search error:', error);
+                    box.innerHTML = '<div class="p-4 text-center text-sm text-red-600">Error de conexión</div>';
                 }
-            }, 500);
+            }, 600);
         }
 
         async function searchDestination(val) {
@@ -517,39 +1028,67 @@
                 showDestinationSuggestions();
                 return;
             }
+            
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(async () => {
                 const box = document.getElementById('dest-suggestions');
-                box.innerHTML = '<div class="p-3 text-center text-sm text-gray-500">Buscando...</div>';
+                box.innerHTML = '<div class="p-4 text-center"><div class="loading-spinner mx-auto"></div></div>';
                 box.classList.add('show');
+                
                 try {
                     const response = await fetch(`${API_URL}/search_places?q=${encodeURIComponent(val)}`);
                     const suggestions = await response.json();
+                    
                     if (suggestions.length === 0) {
-                        box.innerHTML = `<div class="p-4 text-center"><p class="text-sm text-gray-500 mb-2">No se encontraron resultados para "${val}"</p><p class="text-xs text-gray-400">Ejemplos: "Libertadores de América", "Fashion Mall", "UACH"</p></div>`;
+                        box.innerHTML = `
+                            <div class="p-5 text-center">
+                                <p class="text-sm text-gray-600 mb-2">No se encontraron resultados para "<strong>${val}</strong>"</p>
+                                <p class="text-xs text-gray-400">Ejemplos: "Fashion Mall", "Catedral", "UACH"</p>
+                            </div>
+                        `;
                     } else {
                         box.innerHTML = `
-                            <div class="p-2 bg-blue-50 border-b">
-                                <p class="text-xs font-bold text-blue-700 uppercase flex items-center gap-2"><span>🔍</span> ${suggestions.length} resultado${suggestions.length > 1 ? 's' : ''}</p>
+                            <div class="p-3 bg-purple-50 border-b flex items-center gap-2">
+                                <span class="text-xl">🔍</span>
+                                <p class="text-xs font-black text-purple-700 uppercase">${suggestions.length} resultado${suggestions.length > 1 ? 's' : ''}</p>
                             </div>
-                            ${suggestions.map(s => `<div class="suggestion-item" onclick='selectDestinationWithCoords(${JSON.stringify(s)})'><span class="text-xl">${getIconForType(s.type)}</span><div class="flex-1"><p class="text-sm font-medium">${s.name}</p><p class="text-xs text-gray-500">${s.type}${s.source === 'osm' ? ' • OSM' : ''}</p></div></div>`).join('')}
+                            ${suggestions.map(s => `
+                                <div class="suggestion-item" onclick='selectDestinationWithCoords(${JSON.stringify(s)})'>
+                                    <div class="text-2xl">${getIconForType(s.type)}</div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-bold text-gray-900">${s.name}</p>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <p class="text-xs text-gray-500">${s.type}</p>
+                                            ${s.rating ? `<span class="text-xs text-yellow-600">⭐ ${s.rating}</span>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
                         `;
                     }
                     box.classList.add('show');
                 } catch (error) {
-                    console.error('Error:', error);
-                    box.innerHTML = '<div class="p-3 text-center text-sm text-red-600">Error de conexión</div>';
+                    console.error('Search error:', error);
+                    box.innerHTML = '<div class="p-4 text-center text-sm text-red-600">Error de conexión</div>';
                 }
-            }, 500);
+            }, 600);
         }
 
         function getPlaceIcon(type) {
-            const icons = {'Turismo': '🏛️', 'Cultura': '🎨', 'Recreación': '🌳', 'Compras': '🛍️', 'Educación': '🎓', 'Salud': '🏥', 'Restaurante': '🍽️', 'Hotel': '🏨', 'Transporte': '🚌', 'Gobierno': '🏛️', 'Servicios': '🏦', 'Comercial': '🏢'};
+            const icons = {
+                'Turismo': '🏛️', 'Cultura': '🎨', 'Recreación': '🌳',
+                'Compras': '🛍️', 'Educación': '🎓', 'Salud': '🏥',
+                'Restaurante': '🍽️', 'Hotel': '🏨', 'Transporte': '🚌',
+                'Gobierno': '🏛️', 'Servicios': '🏦', 'Comercial': '🏢'
+            };
             return icons[type] || '📍';
         }
 
         function getIconForType(type) {
-            const icons = {'Calle': '🛣️', 'Colonia': '🏘️', 'Dirección': '📍', 'Turismo': '🏛️', 'Cultura': '🎨', 'Recreación': '🌳', 'Compras': '🛍️', 'Educación': '🎓', 'Salud': '🏥', 'Restaurante': '🍽️', 'Hotel': '🏨', 'Transporte': '🚌', 'Gobierno': '🏛️', 'Servicios': '🏦', 'Comercial': '🏢', 'Restaurant': '🍽️', 'Cafe': '☕', 'Bank': '🏦', 'Hospital': '🏥', 'School': '🎓', 'Pharmacy': '💊'};
+            const icons = {
+                'Calle': '🛣️', 'Colonia': '🏘️', 'Dirección': '📍',
+                ...getPlaceIcon(type)
+            };
             return icons[type] || '📍';
         }
 
@@ -557,9 +1096,18 @@
             document.getElementById('origin').value = place.name;
             selectedOriginCoords = place.coords;
             document.getElementById('origin-suggestions').classList.remove('show');
+            
             if (map && place.coords) {
-                map.flyTo(place.coords, 16);
-                L.marker(place.coords, {icon: L.divIcon({className: 'text-2xl', html: '📍', iconSize: [28, 28]})}).addTo(map).bindPopup(`<div class="p-2"><p class="font-bold text-sm">${place.name}</p><p class="text-xs text-gray-500">${place.type}</p></div>`).openPopup();
+                map.flyTo(place.coords, 16, { duration: 1.2 });
+                const tempMarker = L.marker(place.coords, {
+                    icon: L.divIcon({
+                        className: 'custom-icon',
+                        html: '<div style="font-size: 32px;">📍</div>',
+                        iconSize: [32, 32]
+                    })
+                }).addTo(map);
+                
+                setTimeout(() => map.removeLayer(tempMarker), 3000);
             }
         }
 
@@ -567,102 +1115,175 @@
             document.getElementById('destination').value = place.name;
             selectedDestCoords = place.coords;
             document.getElementById('dest-suggestions').classList.remove('show');
+            
             if (map && place.coords) {
-                map.flyTo(place.coords, 16);
-                L.marker(place.coords, {icon: L.divIcon({className: 'text-2xl', html: '🎯', iconSize: [28, 28]})}).addTo(map).bindPopup(`<div class="p-2"><p class="font-bold text-sm">${place.name}</p><p class="text-xs text-gray-500">${place.type}</p></div>`).openPopup();
+                map.flyTo(place.coords, 16, { duration: 1.2 });
+                const tempMarker = L.marker(place.coords, {
+                    icon: L.divIcon({
+                        className: 'custom-icon',
+                        html: '<div style="font-size: 32px;">🎯</div>',
+                        iconSize: [32, 32]
+                    })
+                }).addTo(map);
+                
+                setTimeout(() => map.removeLayer(tempMarker), 3000);
             }
         }
 
         function useCurrentLocation() {
             if (userCoords) {
                 document.getElementById('origin').value = "Mi ubicación";
+                selectedOriginCoords = [userCoords.lat, userCoords.lon];
                 document.getElementById('origin-suggestions').classList.remove('show');
-                map.flyTo([userCoords.lat, userCoords.lon], 15);
+                centerOnUser();
             } else {
                 requestUserLocation();
             }
         }
 
-        function selectOrigin(val) {
-            document.getElementById('origin').value = val;
-            document.getElementById('origin-suggestions').classList.remove('show');
-        }
-
-        function selectDestination(val) {
-            document.getElementById('destination').value = val;
-            document.getElementById('dest-suggestions').classList.remove('show');
-        }
-
-        function setDestinationFromMap(name) {
+        function setDestinationFromMap(name, coords) {
             document.getElementById('destination').value = name;
+            selectedDestCoords = coords;
             map.closePopup();
         }
-
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.input-row')) {
-                document.querySelectorAll('.suggestions-box').forEach(b => b.classList.remove('show'));
-            }
-            if (!e.target.closest('#app-menu') && !e.target.closest('button')) {
-                document.getElementById('app-menu').classList.remove('show');
-            }
-        });
+        // ========== CÁLCULO DE RUTAS ==========
         async function calculateRoute() {
             let origin = document.getElementById('origin').value.trim();
             let destination = document.getElementById('destination').value.trim();
+            
             if (!destination) {
                 alert('Por favor ingresa un destino');
                 return;
             }
+            
+            // Usar coordenadas si están seleccionadas
             if (selectedOriginCoords) {
                 origin = `${selectedOriginCoords[0]},${selectedOriginCoords[1]}`;
             } else if (origin === "Mi ubicación" && userCoords) {
                 origin = `${userCoords.lat},${userCoords.lon}`;
             }
+            
             if (selectedDestCoords) {
                 destination = `${selectedDestCoords[0]},${selectedDestCoords[1]}`;
             }
+            
+            showLoading('Calculando ruta segura...');
+            
             try {
                 const response = await fetch(`${API_URL}/analyze_route`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ origin, destination })
                 });
+                
                 const data = await response.json();
+                hideLoading();
+                
                 if (data.status === 'success') {
                     currentRouteData = data;
-                    if (routeLayer) map.removeLayer(routeLayer);
-                    routeLayer = L.geoJSON(data.route_geometry, {style: { color: '#000', weight: 6, opacity: 0.8 }}).addTo(map);
-                    map.fitBounds(routeLayer.getBounds(), { padding: [80, 350] });
+                    displayRoute(data);
                     displayRouteResults(data);
+                } else {
+                    alert(data.message || 'No se pudo calcular la ruta');
                 }
             } catch (error) {
-                console.error('Error:', error);
+                hideLoading();
+                console.error('Route error:', error);
                 alert('Error al calcular ruta. Verifica tu conexión.');
             }
         }
 
-        function displayRouteResults(data) {
-            document.getElementById('bottom-sheet').classList.add('active');
-            const transportIcons = {'Automóvil': '🚗', 'Motocicleta': '🏍️', 'Bicicleta': '🚴', 'Caminando': '🚶'};
-            document.getElementById('transport-list').innerHTML = data.transport_options.map((opt, i) => `
-                <div class="transport-option ${i === 0 ? 'selected' : ''}" onclick="selectTransport(this)">
-                    <div class="flex items-center flex-1">
-                        <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mr-4 text-2xl">${transportIcons[opt.mode] || '🚗'}</div>
-                        <div><p class="font-bold text-gray-900">${opt.mode}</p><p class="text-sm text-gray-500">${opt.description}</p></div>
-                    </div>
-                    <div class="text-right"><p class="font-bold text-lg">${opt.time}</p></div>
-                </div>
-            `).join('');
-            document.getElementById('route-time').textContent = data.transport_options[0].time;
-            document.getElementById('route-distance').textContent = `${data.distance_km} km`;
-            const riskColors = {'Bajo': 'bg-green-100 text-green-800', 'Medio': 'bg-yellow-100 text-yellow-800', 'Alto': 'bg-red-100 text-red-800', 'Crítico': 'bg-black text-white'};
-            const badge = document.getElementById('risk-badge');
-            badge.className = `px-3 py-2 rounded-lg text-xs font-bold uppercase ${riskColors[data.risk_level]}`;
-            badge.textContent = `Riesgo: ${data.risk_level}`;
+        function displayRoute(data) {
+            // Limpiar ruta anterior
+            if (routeLayer) {
+                map.removeLayer(routeLayer);
+            }
+            
+            // Dibujar nueva ruta
+            const riskColors = {
+                'Bajo': '#10b981',
+                'Medio': '#f59e0b',
+                'Alto': '#ef4444',
+                'Crítico': '#dc2626'
+            };
+            
+            routeLayer = L.geoJSON(data.route_geometry, {
+                style: {
+                    color: riskColors[data.risk_level] || '#000',
+                    weight: 6,
+                    opacity: 0.8,
+                    lineJoin: 'round',
+                    lineCap: 'round'
+                }
+            }).addTo(map);
+            
+            // Ajustar vista al recorrido
+            map.fitBounds(routeLayer.getBounds(), {
+                padding: [100, 400],
+                duration: 1.5
+            });
+            
+            // Marcadores de inicio y fin
+            L.marker([data.origin.lat, data.origin.lon], {
+                icon: L.divIcon({
+                    className: 'custom-icon',
+                    html: '<div style="font-size: 36px;">🚩</div>',
+                    iconSize: [36, 36]
+                })
+            }).addTo(map).bindPopup('<strong>Origen</strong>');
+            
+            L.marker([data.destination.lat, data.destination.lon], {
+                icon: L.divIcon({
+                    className: 'custom-icon',
+                    html: '<div style="font-size: 36px;">🏁</div>',
+                    iconSize: [36, 36]
+                })
+            }).addTo(map).bindPopup('<strong>Destino</strong>');
         }
 
-        function selectTransport(el) {
+        function displayRouteResults(data) {
+            document.getElementById('bottom-sheet').classList.add('active');
+            
+            const transportHTML = data.transport_options.map((opt, i) => `
+                <div class="transport-option ${i === 0 ? 'selected' : ''}" onclick="selectTransport(this, '${opt.time}')">
+                    <div class="flex items-center flex-1">
+                        <div class="w-14 h-14 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mr-4 text-3xl shadow-sm">
+                            ${opt.icon}
+                        </div>
+                        <div>
+                            <p class="font-black text-gray-900 text-base">${opt.mode}</p>
+                            <p class="text-sm text-gray-600">${opt.description}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-black text-xl text-gray-900">${opt.time}</p>
+                        <p class="text-xs text-gray-500">${opt.risk}</p>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('transport-list').innerHTML = transportHTML;
+            document.getElementById('route-time').textContent = data.transport_options[0].time;
+            document.getElementById('route-distance').textContent = `${data.distance_km} km`;
+            
+            const riskColors = {
+                'Bajo': 'bg-green-100 text-green-800 border-2 border-green-300',
+                'Medio': 'bg-yellow-100 text-yellow-800 border-2 border-yellow-300',
+                'Alto': 'bg-red-100 text-red-800 border-2 border-red-300',
+                'Crítico': 'bg-black text-white border-2 border-red-600'
+            };
+            
+            const badge = document.getElementById('risk-badge');
+            badge.className = `px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wide ${riskColors[data.risk_level]}`;
+            badge.textContent = `${data.risk_level}`;
+            
+            lucide.createIcons();
+        }
+
+        function selectTransport(el, time) {
             document.querySelectorAll('.transport-option').forEach(e => e.classList.remove('selected'));
             el.classList.add('selected');
+            document.getElementById('route-time').textContent = time;
         }
 
         function closeBottomSheet() {
@@ -674,19 +1295,21 @@
                 alert('Primero busca una ruta');
                 return;
             }
-            const message = `🚀 Iniciando viaje seguro\n\n📍 Destino: ${currentRouteData.destination.name}\n⏱️ Tiempo estimado: ${currentRouteData.transport_options[0].time}\n📏 Distancia: ${currentRouteData.distance_km} km\n⚠️ Nivel de riesgo: ${currentRouteData.risk_level}\n\n¡Mantente seguro y alerta!`;
-            alert(message);
+            
+            const selectedTransport = document.querySelector('.transport-option.selected');
+            const mode = selectedTransport ? selectedTransport.querySelector('.font-black').textContent : 'Automóvil';
+            
+            alert(`🚀 ¡Viaje iniciado!\n\n🚗 Modo: ${mode}\n📍 Destino: ${currentRouteData.destination.name}\n⏱️ Tiempo: ${currentRouteData.transport_options[0].time}\n📏 Distancia: ${currentRouteData.distance_km} km\n⚠️ Riesgo: ${currentRouteData.risk_level}\n\n✅ ¡Mantente alerta y seguro en tu camino!`);
+            
             closeBottomSheet();
         }
 
-        function toggleMenu() {
-            document.getElementById('app-menu').classList.toggle('show');
-        }
-
+        // ========== REPORTES ==========
         function openReportModal() {
             document.getElementById('app-menu').classList.remove('show');
             document.getElementById('report-modal').classList.remove('hidden');
             document.getElementById('report-modal').style.display = 'flex';
+            lucide.createIcons();
         }
 
         function closeReportModal() {
@@ -695,11 +1318,18 @@
             document.getElementById('report-desc').value = '';
             reportPhotoBase64 = '';
             document.getElementById('report-photo-preview').classList.add('hidden');
+            document.querySelectorAll('.risk-btn').forEach(b => {
+                b.classList.remove('ring-4', 'ring-offset-2');
+            });
         }
 
         function previewReportPhoto(event) {
             const file = event.target.files[0];
             if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('La imagen es muy grande. Máximo 5MB.');
+                    return;
+                }
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     reportPhotoBase64 = e.target.result;
@@ -715,31 +1345,53 @@
             document.querySelectorAll('.risk-btn').forEach(b => {
                 b.classList.remove('ring-4', 'ring-offset-2');
             });
-            btn.classList.add('ring-4', 'ring-offset-2');
+            const ringColors = {
+                'low': 'ring-green-400',
+                'medium': 'ring-yellow-400',
+                'high': 'ring-red-400'
+            };
+            btn.classList.add('ring-4', 'ring-offset-2', ringColors[level]);
         }
 
         async function submitReport() {
             const description = document.getElementById('report-desc').value.trim();
+            
             if (!description || description.length < 10) {
                 alert('La descripción debe tener al menos 10 caracteres');
                 return;
             }
-            const center = map.getCenter();
+            
+            const center = userCoords || { lat: map.getCenter().lat, lon: map.getCenter().lng };
+            
+            showLoading('Enviando reporte...');
+            
             try {
                 const response = await fetch(`${API_URL}/reports/submit`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({user_email: currentUser?.email, description: description, level: selectedRiskLevel, lat: center.lat, lon: center.lng, photo: reportPhotoBase64})
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        user_email: currentUser?.email || 'anonymous',
+                        description: description,
+                        level: selectedRiskLevel,
+                        lat: center.lat,
+                        lon: center.lon,
+                        photo: reportPhotoBase64
+                    })
                 });
+                
                 const data = await response.json();
+                hideLoading();
+                
                 if (data.status === 'success') {
-                    alert('✅ Reporte enviado correctamente. Gracias por contribuir a la seguridad.');
+                    alert('✅ Reporte enviado exitosamente.\n\nGracias por contribuir a la seguridad de nuestra comunidad.');
                     closeReportModal();
                     loadReports();
                 } else {
-                    alert('Error: ' + data.message);
+                    alert('❌ Error: ' + (data.message || 'No se pudo enviar el reporte'));
                 }
             } catch (error) {
-                console.error('Error:', error);
+                hideLoading();
+                console.error('Report error:', error);
                 alert('Error al enviar reporte. Verifica tu conexión.');
             }
         }
@@ -748,6 +1400,7 @@
             try {
                 const response = await fetch(`${API_URL}/reports/list`);
                 const data = await response.json();
+                
                 if (data.status === 'success') {
                     displayReportsOnMap(data.reports);
                 }
@@ -757,24 +1410,114 @@
         }
 
         function displayReportsOnMap(reports) {
+            const colors = {
+                'low': '#10b981',
+                'medium': '#f59e0b',
+                'high': '#ef4444'
+            };
+            
+            const icons = {
+                'low': '⚠️',
+                'medium': '🚨',
+                'high': '🔴'
+            };
+            
             reports.forEach(report => {
-                const colors = {'low': '#10b981', 'medium': '#f59e0b', 'high': '#ef4444'};
                 L.circleMarker([report.lat, report.lon], {
-                    radius: 8, fillColor: colors[report.level] || '#6b7280',
-                    color: '#fff', weight: 2, fillOpacity: 0.9
-                }).addTo(map).bindPopup(`<div class="p-3"><p class="font-bold text-sm mb-1">⚠️ Reporte</p><p class="text-sm text-gray-700">${report.description}</p>${report.photo ? `<img src="${report.photo}" class="w-full mt-2 rounded-lg">` : ''}<p class="text-xs text-gray-500 mt-2">Nivel: ${report.level}</p></div>`);
+                    radius: 10,
+                    fillColor: colors[report.level] || '#6b7280',
+                    color: '#fff',
+                    weight: 3,
+                    fillOpacity: 0.85
+                }).addTo(map).bindPopup(`
+                    <div class="p-4 max-w-xs">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-2xl">${icons[report.level]}</span>
+                            <h3 class="font-black text-base text-gray-900">Reporte de Incidente</h3>
+                        </div>
+                        <p class="text-sm text-gray-700 mb-3">${report.description || report.desc}</p>
+                        ${report.photo ? `<img src="${report.photo}" class="w-full rounded-lg mt-2 shadow-md">` : ''}
+                        <div class="mt-3 pt-3 border-t border-gray-200">
+                            <p class="text-xs text-gray-500">Nivel: <span class="font-bold">${report.level}</span></p>
+                            <p class="text-xs text-gray-400 mt-1">${new Date(report.timestamp || report.time).toLocaleDateString('es-MX')}</p>
+                        </div>
+                    </div>
+                `);
             });
+        }
+
+        // ========== UTILIDADES ==========
+        function toggle3DMode() {
+            is3DMode = !is3DMode;
+            document.body.classList.toggle('map-3d-mode');
+            document.getElementById('app-menu').classList.remove('show');
+            
+            if (is3DMode) {
+                map.setZoom(17);
+                setTimeout(() => map.invalidateSize(), 950);
+            } else {
+                map.setZoom(13);
+                setTimeout(() => map.invalidateSize(), 950);
+            }
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('app-menu');
+            menu.classList.toggle('show');
+            lucide.createIcons();
         }
 
         function showProfile() {
             toggleMenu();
-            alert(`👤 Perfil\n\nNombre: ${currentUser?.name}\nEmail: ${currentUser?.email}`);
+            const reportsCount = currentUser?.reports_count || 0;
+            alert(`👤 Perfil de Usuario\n\n📝 Nombre: ${currentUser?.name}\n✉️ Email: ${currentUser?.email}\n📊 Reportes enviados: ${reportsCount}\n\n✅ Gracias por hacer tu comunidad más segura.`);
         }
 
         function viewReports() {
             toggleMenu();
-            alert('Ver reportes de la comunidad (función en desarrollo)');
+            alert('📍 Ver reportes de la comunidad\n\nEsta función mostrará todos los reportes activos en el mapa con filtros por nivel de riesgo y fecha.');
         }
+
+        function showLoading(message = 'Cargando...') {
+            // Implementación simple de loading
+            const existing = document.getElementById('loading-overlay');
+            if (existing) return;
+            
+            const overlay = document.createElement('div');
+            overlay.id = 'loading-overlay';
+            overlay.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm z-[6000] flex items-center justify-center';
+            overlay.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-2xl flex items-center gap-4">
+                    <div class="loading-spinner"></div>
+                    <span class="font-semibold text-gray-900">${message}</span>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+
+        // Cerrar dropdowns al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.input-row')) {
+                document.querySelectorAll('.suggestions-box').forEach(b => b.classList.remove('show'));
+            }
+            if (!e.target.closest('#app-menu') && !e.target.closest('button[onclick="toggleMenu()"]')) {
+                document.getElementById('app-menu').classList.remove('show');
+            }
+        });
+
+        // Limpiar al cerrar
+        window.addEventListener('beforeunload', () => {
+            if (userLocationWatch) {
+                navigator.geolocation.clearWatch(userLocationWatch);
+            }
+        });
     </script>
 </body>
 </html>
