@@ -3,58 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zeta - Navegación Segura Chihuahua</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="description" content="Zeta Pro - Sistema profesional de navegación segura en Chihuahua">
+    <meta name="theme-color" content="#3b82f6">
+    <title>Zeta Pro - Navegación Segura Profesional</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Custom CSS -->
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', -apple-system, system-ui, sans-serif; overflow: hidden; background: #f8fafc; }
-        #map { height: 100vh; width: 100%; z-index: 0; position: relative; }
-        
-        .map-3d-mode #map {
-            transform: perspective(1400px) rotateX(50deg) translateY(-8%);
-            transform-origin: center bottom;
-            transition: transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+        /* ==================== RESET Y BASE ==================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
         
-        /* Marcador de usuario estilo Life360 */
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --critical: #dc2626;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --light-gray: #f1f5f9;
+            --white: #ffffff;
+            --shadow: 0 10px 40px rgba(0,0,0,0.1);
+            --shadow-lg: 0 20px 60px rgba(0,0,0,0.15);
+            --radius: 16px;
+            --radius-lg: 24px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            overflow: hidden;
+            background: var(--light-gray);
+            color: var(--dark);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* ==================== MAPA ==================== */
+        #map {
+            height: 100vh;
+            width: 100%;
+            z-index: 0;
+            position: relative;
+        }
+        
+        .leaflet-popup-content-wrapper {
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        .leaflet-popup-content {
+            margin: 0;
+            width: 100% !important;
+        }
+        
+        /* ==================== MODO 3D ==================== */
+        .map-3d-mode #map {
+            transform: perspective(1500px) rotateX(55deg) translateY(-10%);
+            transform-origin: center bottom;
+            transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        /* ==================== MARCADOR DE USUARIO ESTILO LIFE360 ==================== */
+        .user-marker-container {
+            position: relative;
+            z-index: 1000;
+        }
+        
         .user-marker {
-            width: 56px; height: 56px; border-radius: 50%;
-            border: 5px solid white; box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 2px rgba(59,130,246,0.3);
-            background-size: cover; background-position: center; position: relative;
-            animation: markerPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 6px solid var(--white);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 0 0 3px rgba(59,130,246,0.3);
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            animation: markerPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
         
         @keyframes markerPop {
-            0% { transform: scale(0); }
-            50% { transform: scale(1.15); }
-            100% { transform: scale(1); }
+            0% { transform: scale(0) rotate(-180deg); }
+            60% { transform: scale(1.2) rotate(0deg); }
+            100% { transform: scale(1) rotate(0deg); }
         }
         
         .user-marker::after {
-            content: ''; position: absolute; bottom: -24px; left: 50%;
-            transform: translateX(-50%); width: 0; height: 0;
-            border-left: 13px solid transparent; border-right: 13px solid transparent;
-            border-top: 24px solid white; filter: drop-shadow(0 3px 8px rgba(0,0,0,0.25));
+            content: '';
+            position: absolute;
+            bottom: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 28px solid var(--white);
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
         }
         
         .pulse-ring {
-            position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            background: rgba(59, 130, 246, 0.5); animation: pulse 2.5s ease-out infinite;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, 0.6);
+            animation: pulse 3s ease-out infinite;
         }
         
         @keyframes pulse {
-            0% { transform: scale(0.8); opacity: 1; }
-            100% { transform: scale(2.8); opacity: 0; }
+            0% {
+                transform: scale(0.8);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(3.5);
+                opacity: 0;
+            }
         }
         
+        /* ==================== MODALES ==================== */
         .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.88);
-            backdrop-filter: blur(14px); z-index: 5000;
-            display: flex; align-items: center; justify-content: center;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(16px);
+            z-index: 5000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             animation: fadeIn 0.3s ease-out;
         }
         
@@ -64,121 +156,654 @@
         }
         
         .modal-content {
-            animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            max-height: 90vh;
+            overflow-y: auto;
         }
         
         @keyframes slideUp {
-            from { transform: translateY(40px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(60px) scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
         }
         
+        /* ==================== BARRA DE BÚSQUEDA ==================== */
         .search-box {
-            position: absolute; top: 20px; left: 16px; right: 16px; z-index: 1000;
-            background: white; border-radius: 20px; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
-            padding: 20px; backdrop-filter: blur(10px);
+            position: absolute;
+            top: 24px;
+            left: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            transition: var(--transition);
         }
         
-        .fab {
-            position: absolute; right: 20px; width: 60px; height: 60px;
-            background: white; border-radius: 50%; 
-            box-shadow: 0 6px 20px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08);
-            display: flex; align-items: center; justify-content: center; z-index: 1000;
-            cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        .search-box.collapsed {
+            transform: translateY(-150%);
+            opacity: 0;
+            pointer-events: none;
         }
         
-        .fab:hover { transform: scale(1.08); box-shadow: 0 8px 28px rgba(0,0,0,0.22); }
-        .fab:active { transform: scale(0.95); }
-        .fab-3d { bottom: 100px; }
-        .fab-loc { bottom: 180px; }
-        .fab-report { bottom: 260px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
-        .fab-report i { color: white; }
-        
-        .bottom-sheet {
-            position: absolute; bottom: 0; left: 0; right: 0;
-            background: white; border-radius: 28px 28px 0 0;
-            box-shadow: 0 -8px 40px rgba(0,0,0,0.15); z-index: 1001;
-            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            max-height: 80vh; overflow-y: auto;
+        /* ==================== INPUTS MODERNOS ==================== */
+        .input-group {
+            position: relative;
+            margin-bottom: 16px;
         }
         
-        .bottom-sheet.active { transform: translateY(0); }
-        
-        .input-row {
-            display: flex; align-items: center; background: #f8fafc;
-            border-radius: 14px; padding: 14px 16px; position: relative;
-            transition: all 0.2s; border: 2px solid transparent;
-        }
-        
-        .input-row:focus-within { background: white; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-        
-        .input-row input {
-            background: transparent; width: 100%; outline: none;
-            font-size: 15px; margin-left: 12px; border: none; color: #1e293b;
-            font-weight: 500;
-        }
-        
-        .input-row input::placeholder { color: #94a3b8; }
-        
-        .suggestions-box {
-            position: absolute; top: calc(100% + 8px); left: 0; right: 0;
-            background: white; border-radius: 16px; margin-top: 4px;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
-            max-height: 320px; overflow-y: auto; z-index: 1002; display: none;
-        }
-        
-        .suggestions-box.show { display: block; animation: slideDown 0.3s ease-out; }
-        
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .suggestion-item {
-            padding: 16px 18px; border-bottom: 1px solid #f1f5f9;
-            cursor: pointer; display: flex; align-items: center; gap: 14px;
-            transition: all 0.15s;
-        }
-        
-        .suggestion-item:hover { background: #f8fafc; }
-        .suggestion-item:active { background: #f1f5f9; }
-        
-        .transport-option {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 16px 18px; border-radius: 14px; border: 2px solid #e2e8f0;
-            cursor: pointer; transition: all 0.2s;
-        }
-        
-        .transport-option:hover { background: #f8fafc; border-color: #cbd5e1; }
-        .transport-option.selected { 
-            background: #eff6ff; border-color: #3b82f6; 
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-        }
-        
-        .profile-pic-upload {
-            width: 130px; height: 130px; border-radius: 50%;
-            border: 4px dashed #cbd5e1; display: flex;
-            align-items: center; justify-content: center; cursor: pointer;
-            background: #f8fafc; transition: all 0.3s; overflow: hidden;
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            background: var(--light-gray);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            transition: var(--transition);
+            border: 2px solid transparent;
             position: relative;
         }
         
-        .profile-pic-upload:hover { border-color: #3b82f6; background: #eff6ff; }
-        .profile-pic-upload img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .photo-preview {
-            width: 120px; height: 120px; border-radius: 16px;
-            object-fit: cover; cursor: pointer; border: 3px solid #e5e7eb;
-            transition: all 0.2s;
+        .input-wrapper:focus-within {
+            background: var(--white);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
         }
         
-        .photo-preview:hover { border-color: #3b82f6; transform: scale(1.05); }
+        .input-wrapper input {
+            background: transparent;
+            width: 100%;
+            outline: none;
+            font-size: 15px;
+            margin-left: 12px;
+            border: none;
+            color: var(--dark);
+            font-weight: 500;
+        }
         
-        .loading-spinner {
-            border: 3px solid #f3f4f6;
-            border-top: 3px solid #3b82f6;
+        .input-wrapper input::placeholder {
+            color: var(--gray);
+        }
+        
+        .input-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+        
+        /* ==================== SUGERENCIAS ==================== */
+        .suggestions-box {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1002;
+            display: none;
+        }
+        
+        .suggestions-box.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .suggestion-item {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--light-gray);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: var(--transition);
+        }
+        
+        .suggestion-item:hover {
+            background: var(--light-gray);
+            padding-left: 24px;
+        }
+        
+        .suggestion-item:active {
+            background: #e2e8f0;
+        }
+        
+        .suggestion-icon {
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+        
+        .suggestion-content {
+            flex: 1;
+        }
+        
+        .suggestion-name {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+        
+        .suggestion-meta {
+            font-size: 13px;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .rating-stars {
+            color: #fbbf24;
+            font-size: 14px;
+        }
+        
+        /* ==================== BOTONES FLOTANTES (FAB) ==================== */
+        .fab {
+            position: absolute;
+            right: 24px;
+            width: 64px;
+            height: 64px;
+            background: var(--white);
             border-radius: 50%;
-            width: 24px; height: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+        }
+        
+        .fab:hover {
+            transform: scale(1.1) translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .fab:active {
+            transform: scale(0.95);
+        }
+        
+        .fab svg {
+            width: 28px;
+            height: 28px;
+        }
+        
+        .fab-search {
+            bottom: 420px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        }
+        
+        .fab-search svg {
+            color: var(--white);
+        }
+        
+        .fab-3d {
+            bottom: 340px;
+        }
+        
+        .fab-location {
+            bottom: 260px;
+        }
+        
+        .fab-report {
+            bottom: 180px;
+            background: linear-gradient(135deg, var(--danger) 0%, var(--critical) 100%);
+        }
+        
+        .fab-report svg {
+            color: var(--white);
+        }
+        
+        .fab-menu {
+            bottom: 100px;
+            background: linear-gradient(135deg, var(--secondary) 0%, #7c3aed 100%);
+        }
+        
+        .fab-menu svg {
+            color: var(--white);
+        }
+        
+        /* ==================== BOTTOM SHEET ==================== */
+        .bottom-sheet {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            box-shadow: 0 -10px 50px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        
+        .bottom-sheet.active {
+            transform: translateY(0);
+        }
+        
+        .bottom-sheet-handle {
+            width: 48px;
+            height: 5px;
+            background: #cbd5e1;
+            border-radius: 10px;
+            margin: 16px auto;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .bottom-sheet-handle:hover {
+            background: var(--gray);
+            width: 64px;
+        }
+        
+        /* ==================== OPCIONES DE TRANSPORTE ==================== */
+        .transport-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 20px;
+            border-radius: var(--radius);
+            border: 2px solid #e2e8f0;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 12px;
+        }
+        
+        .transport-option:hover {
+            background: var(--light-gray);
+            border-color: #cbd5e1;
+            transform: translateX(4px);
+        }
+        
+        .transport-option.selected {
+            background: #eff6ff;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+        
+        .transport-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--light-gray) 0%, #e2e8f0 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-right: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .transport-info {
+            flex: 1;
+        }
+        
+        .transport-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+        
+        .transport-desc {
+            font-size: 13px;
+            color: var(--gray);
+        }
+        
+        .transport-time {
+            text-align: right;
+        }
+        
+        .transport-time-value {
+            font-weight: 800;
+            font-size: 22px;
+            color: var(--dark);
+        }
+        
+        .transport-risk {
+            font-size: 12px;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+        
+    </style>
+</head>
+<body>
+/* ==================== BADGES Y ALERTAS ==================== */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .badge-critical {
+            background: var(--critical);
+            color: var(--white);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        }
+        
+        /* ==================== BOTONES ==================== */
+        .btn {
+            padding: 16px 24px;
+            border-radius: var(--radius);
+            font-weight: 700;
+            font-size: 15px;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        
+        .btn:active {
+            transform: scale(0.97);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 8px 28px rgba(59, 130, 246, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            color: var(--white);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-success:hover {
+            box-shadow: 0 8px 28px rgba(16, 185, 129, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger) 0%, var(--critical) 100%);
+            color: var(--white);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+        }
+        
+        .btn-secondary {
+            background: var(--light-gray);
+            color: var(--dark);
+        }
+        
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+        
+        .btn-full {
+            width: 100%;
+        }
+        
+        .btn-lg {
+            padding: 20px 32px;
+            font-size: 17px;
+        }
+        
+        /* ==================== GALERÍA DE FOTOS ==================== */
+        .place-gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 16px 0;
+        }
+        
+        .place-gallery img {
+            width: 100%;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .place-gallery img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* ==================== RESEÑAS ==================== */
+        .review-item {
+            padding: 16px;
+            background: var(--light-gray);
+            border-radius: var(--radius);
+            margin-bottom: 12px;
+            transition: var(--transition);
+        }
+        
+        .review-item:hover {
+            background: #e2e8f0;
+        }
+        
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .review-author {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .review-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--white);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .review-author-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--dark);
+        }
+        
+        .review-stars {
+            color: #fbbf24;
+            font-size: 16px;
+        }
+        
+        .review-text {
+            font-size: 14px;
+            color: var(--gray);
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        
+        .review-images {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .review-images img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        /* ==================== FORMULARIOS ==================== */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+        
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--radius);
+            font-size: 15px;
+            font-family: inherit;
+            transition: var(--transition);
+            background: var(--white);
+        }
+        
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        /* ==================== PROFILE PIC UPLOAD ==================== */
+        .profile-pic-upload {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: 4px dashed #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: var(--light-gray);
+            transition: var(--transition);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .profile-pic-upload:hover {
+            border-color: var(--primary);
+            background: #eff6ff;
+            transform: scale(1.05);
+        }
+        
+        .profile-pic-upload img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .profile-pic-preview {
+            text-align: center;
+            color: var(--gray);
+        }
+        
+        .profile-pic-preview svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 8px;
+        }
+        
+        /* ==================== PHOTO UPLOAD ==================== */
+        .photo-upload-area {
+            border: 3px dashed #cbd5e1;
+            border-radius: var(--radius);
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--light-gray);
+        }
+        
+        .photo-upload-area:hover {
+            border-color: var(--primary);
+            background: #eff6ff;
+        }
+        
+        .photo-preview {
+            width: 140px;
+            height: 140px;
+            border-radius: var(--radius);
+            object-fit: cover;
+            cursor: pointer;
+            border: 3px solid #e2e8f0;
+            transition: var(--transition);
+        }
+        
+        .photo-preview:hover {
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+        
+        .photo-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        /* ==================== LOADING SPINNER ==================== */
+        .loading-spinner {
+            border: 4px solid var(--light-gray);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
             animation: spin 0.8s linear infinite;
         }
         
@@ -187,1337 +812,1831 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Estilos para galería de fotos */
-        .place-gallery {
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 8px; margin: 12px 0;
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 6000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
-        .place-gallery img {
-            width: 100%; height: 80px; object-fit: cover;
-            border-radius: 8px; cursor: pointer; transition: all 0.2s;
+        .loading-content {
+            background: var(--white);
+            padding: 32px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 20px;
         }
         
-        .place-gallery img:hover { transform: scale(1.05); opacity: 0.9; }
+        .loading-text {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 16px;
+        }
         
-        .review-item {
-            padding: 12px; background: #f8fafc; border-radius: 12px;
+        /* ==================== SEVERITY SELECTOR ==================== */
+        .severity-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .severity-btn {
+            padding: 20px 16px;
+            border: 3px solid;
+            border-radius: var(--radius);
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--white);
+        }
+        
+        .severity-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .severity-btn.active {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+        }
+        
+        .severity-low {
+            border-color: var(--success);
+            color: var(--success);
+        }
+        
+        .severity-low.active {
+            background: #d1fae5;
+        }
+        
+        .severity-medium {
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+        
+        .severity-medium.active {
+            background: #fef3c7;
+        }
+        
+        .severity-high {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+        
+        .severity-high.active {
+            background: #fee2e2;
+        }
+        
+        .severity-icon {
+            font-size: 32px;
             margin-bottom: 8px;
         }
         
-        .stars { color: #fbbf24; font-size: 14px; }
+        .severity-label {
+            font-weight: 700;
+            font-size: 14px;
+        }
         
-        /* Scrollbar personalizado */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    </style>
+        /* ==================== SCROLLBAR ==================== */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--light-gray);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray);
+        }
+        
+        /* ==================== ANIMACIONES ==================== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fade-in-up {
+            animation: fadeInUp 0.5s ease-out;
+        }
+        
+        /* ==================== UTILIDADES ==================== */
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .mt-2 { margin-top: 8px; }
+        .mt-3 { margin-top: 12px; }
+        .mt-4 { margin-top: 16px; }
+        .mb-2 { margin-bottom: 8px; }
+        .mb-3 { margin-bottom: 12px; }
+        .mb-4 { margin-bottom: 16px; }
+        .mb-6 { margin-bottom: 24px; }
+        .p-4 { padding: 16px; }
+        .p-6 { padding: 24px; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 12px; }
+        .gap-4 { gap: 16px; }
+        .hidden { display: none; }
+        .relative { position: relative; }
+        
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .search-box {
+                top: 16px;
+                left: 12px;
+                right: 12px;
+                padding: 20px;
+            }
+            
+            .fab {
+                width: 56px;
+                height: 56px;
+                right: 16px;
+            }
+            
+            .fab svg {
+                width: 24px;
+                height: 24px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                max-width: none;
+            }
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            /* Dark mode (opcional para futuro) */
+        }
+    <!-- Cerrar </style> y </head>, abrir <body> -->
+</style>
 </head>
-<body class="bg-gray-50">
+<body>
+    <!-- ==================== MAPA ==================== -->
     <div id="map"></div>
 
-    <!-- Modal de Términos y Condiciones -->
+    <!-- ==================== MODAL: TÉRMINOS Y CONDICIONES ==================== -->
     <div id="terms-modal" class="modal-overlay">
-        <div class="modal-content bg-white rounded-3xl p-8 max-w-md w-11/12 shadow-2xl">
+        <div class="modal-content" style="background: white; border-radius: 28px; padding: 40px; max-width: 500px; width: 90%;">
             <div class="text-center mb-6">
-                <div class="w-24 h-24 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-full mx-auto mb-5 flex items-center justify-center shadow-lg">
-                    <span class="text-5xl">🛡️</span>
+                <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); border-radius: 50%; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 40px rgba(59,130,246,0.3);">
+                    <span style="font-size: 56px;">🛡️</span>
                 </div>
-                <h2 class="text-3xl font-black text-gray-900 mb-2">Bienvenido a Zeta</h2>
-                <p class="text-gray-600 text-lg">Tu seguridad es nuestra prioridad</p>
+                <h2 style="font-size: 32px; font-weight: 900; color: var(--dark); margin-bottom: 12px;">Bienvenido a Zeta Pro</h2>
+                <p style="color: var(--gray); font-size: 18px;">Tu seguridad es nuestra máxima prioridad</p>
             </div>
-            <div class="bg-gray-50 rounded-2xl p-5 max-h-72 overflow-y-auto mb-6 text-sm">
-                <h3 class="font-bold text-lg mb-3 text-gray-900">Términos y Condiciones</h3>
-                <p class="text-gray-700 mb-4">Al usar Zeta, aceptas:</p>
-                <ul class="space-y-3 text-gray-600">
-                    <li class="flex items-start gap-2">
-                        <span class="text-green-600 text-xl">✓</span>
-                        <span>Compartir tu ubicación para calcular rutas seguras personalizadas</span>
+            
+            <div style="background: var(--light-gray); border-radius: 20px; padding: 24px; max-height: 320px; overflow-y: auto; margin-bottom: 28px;">
+                <h3 style="font-weight: 700; font-size: 18px; color: var(--dark); margin-bottom: 16px;">Términos y Condiciones de Uso</h3>
+                <p style="color: var(--gray); margin-bottom: 16px; line-height: 1.6;">Al utilizar Zeta Pro, aceptas lo siguiente:</p>
+                
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    <li style="display: flex; align-items: start; gap: 12px; margin-bottom: 16px;">
+                        <span style="color: var(--success); font-size: 24px; flex-shrink: 0;">✓</span>
+                        <span style="color: var(--gray); line-height: 1.6;">Compartir tu ubicación GPS para calcular rutas seguras personalizadas</span>
                     </li>
-                    <li class="flex items-start gap-2">
-                        <span class="text-green-600 text-xl">✓</span>
-                        <span>Recibir alertas de seguridad en tiempo real de tu área</span>
+                    <li style="display: flex; align-items: start; gap: 12px; margin-bottom: 16px;">
+                        <span style="color: var(--success); font-size: 24px; flex-shrink: 0;">✓</span>
+                        <span style="color: var(--gray); line-height: 1.6;">Recibir alertas de seguridad en tiempo real de tu zona</span>
                     </li>
-                    <li class="flex items-start gap-2">
-                        <span class="text-green-600 text-xl">✓</span>
-                        <span>Contribuir con reportes verificados y responsables</span>
+                    <li style="display: flex; align-items: start; gap: 12px; margin-bottom: 16px;">
+                        <span style="color: var(--success); font-size: 24px; flex-shrink: 0;">✓</span>
+                        <span style="color: var(--gray); line-height: 1.6;">Contribuir con reportes verificados y responsables</span>
                     </li>
-                    <li class="flex items-start gap-2">
-                        <span class="text-green-600 text-xl">✓</span>
-                        <span>Uso ético y responsable de la información compartida</span>
+                    <li style="display: flex; align-items: start; gap: 12px; margin-bottom: 16px;">
+                        <span style="color: var(--success); font-size: 24px; flex-shrink: 0;">✓</span>
+                        <span style="color: var(--gray); line-height: 1.6;">Uso ético y responsable de toda la información</span>
                     </li>
-                    <li class="flex items-start gap-2">
-                        <span class="text-green-600 text-xl">✓</span>
-                        <span>Política de privacidad y protección de datos personales</span>
+                    <li style="display: flex; align-items: start; gap: 12px;">
+                        <span style="color: var(--success); font-size: 24px; flex-shrink: 0;">✓</span>
+                        <span style="color: var(--gray); line-height: 1.6;">Política de privacidad y protección de datos personales</span>
                     </li>
                 </ul>
-                <p class="mt-5 text-xs text-gray-500 leading-relaxed">
-                    Zeta utiliza tu ubicación GPS para calcular las rutas más seguras según 
-                    datos verificados de seguridad pública. Tu información personal se maneja 
-                    de forma confidencial y nunca se comparte con terceros.
+                
+                <p style="margin-top: 20px; font-size: 13px; color: var(--gray); line-height: 1.6;">
+                    <strong>Protección de datos:</strong> Tu información se cifra y se maneja de forma confidencial. 
+                    Nunca compartimos tus datos personales con terceros sin tu consentimiento expreso.
                 </p>
             </div>
-            <button onclick="acceptTerms()" class="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]">
+            
+            <button onclick="acceptTerms()" class="btn btn-primary btn-full btn-lg">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
                 Aceptar y Continuar
             </button>
         </div>
     </div>
 
-    <!-- Modal de Registro -->
+    <!-- ==================== MODAL: REGISTRO ==================== -->
     <div id="register-modal" class="modal-overlay hidden">
-        <div class="modal-content bg-white rounded-3xl p-8 max-w-md w-11/12 shadow-2xl">
-            <h2 class="text-3xl font-black text-center mb-2 text-gray-900">Crea tu Cuenta</h2>
-            <p class="text-center text-gray-600 mb-6">Únete a la comunidad más segura</p>
+        <div class="modal-content" style="background: white; border-radius: 28px; padding: 40px; max-width: 480px; width: 90%;">
+            <h2 style="font-size: 32px; font-weight: 900; text-align: center; color: var(--dark); margin-bottom: 8px;">Crea tu Cuenta</h2>
+            <p style="text-align: center; color: var(--gray); margin-bottom: 32px;">Únete a la comunidad más segura de Chihuahua</p>
             
             <div class="flex flex-col items-center mb-6">
                 <label for="profile-pic-input" class="profile-pic-upload">
-                    <div id="profile-preview" class="text-center w-full h-full flex items-center justify-center flex-col">
-                        <i data-lucide="camera" class="w-14 h-14 text-gray-400 mb-2"></i>
-                        <p class="text-xs text-gray-500 font-medium">Añadir foto</p>
+                    <div id="profile-preview" class="profile-pic-preview">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        <p style="font-size: 13px; font-weight: 600; margin-top: 8px;">Añadir foto</p>
                     </div>
                 </label>
                 <input type="file" id="profile-pic-input" accept="image/*" class="hidden" onchange="previewProfilePic(event)">
-                <p class="text-xs text-gray-500 mt-2">Tu foto aparecerá en el mapa como Life360</p>
+                <p style="font-size: 13px; color: var(--gray); margin-top: 12px;">Tu foto aparecerá en el mapa estilo Life360</p>
             </div>
             
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre completo</label>
-                    <input type="text" id="reg-name" placeholder="Juan Pérez" 
-                        class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Correo electrónico</label>
-                    <input type="email" id="reg-email" placeholder="juan@email.com" 
-                        class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900">
-                </div>
+            <div class="form-group">
+                <label class="form-label">Nombre completo</label>
+                <input type="text" id="reg-name" class="form-input" placeholder="Juan Pérez González">
             </div>
             
-            <button onclick="registerUser()" class="w-full bg-black text-white py-4 rounded-xl font-bold shadow-lg hover:bg-gray-800 transition-all mt-6 hover:scale-[1.02]">
+            <div class="form-group">
+                <label class="form-label">Correo electrónico</label>
+                <input type="email" id="reg-email" class="form-input" placeholder="juan@email.com">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Teléfono (opcional)</label>
+                <input type="tel" id="reg-phone" class="form-input" placeholder="614 123 4567">
+            </div>
+            
+            <button onclick="registerUser()" class="btn btn-primary btn-full btn-lg mb-3">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                </svg>
                 Registrarse
             </button>
-            <button onclick="skipRegistration()" class="w-full text-gray-500 py-3 text-sm mt-3 hover:text-gray-700 transition-colors">
+            
+            <button onclick="skipRegistration()" class="btn btn-secondary btn-full" style="padding: 14px;">
                 Continuar sin cuenta
             </button>
         </div>
     </div>
 
-    <!-- Modal de Reportar Incidente -->
-    <div id="report-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-[3000] backdrop-blur-sm">
-        <div class="bg-white p-7 rounded-3xl w-11/12 max-w-md shadow-2xl">
-            <div class="flex items-center justify-between mb-5">
-                <h3 class="text-2xl font-black text-gray-900">Reportar Incidente</h3>
-                <button onclick="closeReportModal()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                    <i data-lucide="x" class="w-6 h-6 text-gray-600"></i>
+    <!-- ==================== MODAL: REPORTAR INCIDENTE ==================== -->
+    <div id="report-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="background: white; border-radius: 28px; padding: 32px; max-width: 540px; width: 90%;">
+            <div class="flex justify-between items-center mb-6">
+                <h3 style="font-size: 28px; font-weight: 900; color: var(--dark);">Reportar Incidente</h3>
+                <button onclick="closeReportModal()" style="background: var(--light-gray); border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition);">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
                 </button>
             </div>
             
-            <textarea id="report-desc" 
-                class="w-full p-4 border-2 border-gray-200 rounded-xl text-sm mb-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
-                rows="4" 
-                placeholder="Describe el incidente con detalle (mínimo 10 caracteres)..."></textarea>
+            <div class="form-group">
+                <label class="form-label">Describe el incidente con detalle</label>
+                <textarea id="report-desc" class="form-textarea" placeholder="Ej: Vi una patrulla persiguiendo un vehículo por la Av. Universidad a las 3:00 PM. Había mucho tráfico..." style="min-height: 120px;"></textarea>
+                <p style="font-size: 12px; color: var(--gray); margin-top: 8px;">Mínimo 15 caracteres. Sé específico y objetivo.</p>
+            </div>
             
-            <div class="mb-5">
-                <label class="block text-sm font-bold text-gray-700 mb-3">Nivel de riesgo</label>
-                <div class="grid grid-cols-3 gap-3">
-                    <button onclick="setRiskLevel('low', this)" 
-                        class="risk-btn p-4 border-2 rounded-xl text-sm font-bold text-green-700 border-green-400 hover:bg-green-50 transition-all">
-                        <div class="text-2xl mb-1">🟢</div>
-                        Bajo
-                    </button>
-                    <button onclick="setRiskLevel('medium', this)" 
-                        class="risk-btn p-4 border-2 rounded-xl text-sm font-bold text-yellow-700 border-yellow-400 hover:bg-yellow-50 transition-all">
-                        <div class="text-2xl mb-1">🟡</div>
-                        Medio
-                    </button>
-                    <button onclick="setRiskLevel('high', this)" 
-                        class="risk-btn p-4 border-2 rounded-xl text-sm font-bold text-red-700 border-red-400 hover:bg-red-50 transition-all">
-                        <div class="text-2xl mb-1">🔴</div>
-                        Alto
-                    </button>
+            <div class="form-group">
+                <label class="form-label">Categoría</label>
+                <select id="report-category" class="form-select">
+                    <option value="security">Seguridad</option>
+                    <option value="traffic">Tráfico</option>
+                    <option value="accident">Accidente</option>
+                    <option value="crime">Crimen</option>
+                    <option value="protest">Manifestación</option>
+                    <option value="other">Otro</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Nivel de severidad</label>
+                <div class="severity-grid">
+                    <div class="severity-btn severity-low" onclick="selectSeverity('low', this)">
+                        <div class="severity-icon">🟢</div>
+                        <div class="severity-label">Bajo</div>
+                    </div>
+                    <div class="severity-btn severity-medium" onclick="selectSeverity('medium', this)">
+                        <div class="severity-icon">🟡</div>
+                        <div class="severity-label">Medio</div>
+                    </div>
+                    <div class="severity-btn severity-high" onclick="selectSeverity('high', this)">
+                        <div class="severity-icon">🔴</div>
+                        <div class="severity-label">Alto</div>
+                    </div>
                 </div>
             </div>
             
-            <div class="mb-5">
-                <label class="block text-sm font-bold text-gray-700 mb-3">Evidencia fotográfica (opcional)</label>
-                <input type="file" id="report-photo" accept="image/*" class="w-full text-sm" onchange="previewReportPhoto(event)">
-                <div id="report-photo-preview" class="mt-3 hidden">
-                    <img id="report-photo-img" class="photo-preview">
-                </div>
+            <div class="form-group">
+                <label class="form-label">Evidencia fotográfica (opcional, máx. 3)</label>
+                <label for="report-photos" class="photo-upload-area">
+                    <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin: 0 auto 12px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <p style="font-weight: 600; color: var(--dark);">Clic para subir fotos</p>
+                    <p style="font-size: 13px; color: var(--gray); margin-top: 8px;">JPG, PNG - Máx 5MB cada una</p>
+                </label>
+                <input type="file" id="report-photos" accept="image/*" multiple class="hidden" onchange="previewReportPhotos(event)" max="3">
+                <div id="report-photos-preview" class="photo-preview-grid hidden"></div>
             </div>
             
             <div class="flex gap-3">
-                <button onclick="closeReportModal()" 
-                    class="flex-1 py-4 text-gray-700 font-bold bg-gray-100 rounded-xl hover:bg-gray-200 transition-all">
+                <button onclick="closeReportModal()" class="btn btn-secondary" style="flex: 1;">
                     Cancelar
                 </button>
-                <button onclick="submitReport()" 
-                    class="flex-1 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]">
+                <button onclick="submitReport()" class="btn btn-danger" style="flex: 2;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                    </svg>
                     Enviar Reporte
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Barra de búsqueda -->
-    <div class="search-box hidden" id="search-box">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="font-black text-xl text-gray-900">Planea tu ruta</h3>
-            <button onclick="toggleMenu()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <i data-lucide="more-vertical" class="w-6 h-6 text-gray-700"></i>
-            </button>
+    <!-- ==================== BARRA DE BÚSQUEDA ==================== -->
+    <div class="search-box" id="search-box">
+        <div class="flex justify-between items-center mb-4">
+            <h3 style="font-size: 22px; font-weight: 900; color: var(--dark);">Planea tu ruta</h3>
+            <div class="flex gap-2">
+                <button onclick="clearRoute()" class="btn btn-secondary" style="padding: 10px 16px; font-size: 13px;">
+                    Limpiar
+                </button>
+            </div>
         </div>
         
-        <div class="space-y-3">
-            <div class="input-row">
-                <div class="w-4 h-4 bg-blue-600 rounded-full flex-shrink-0"></div>
-                <input type="text" id="origin" placeholder="Tu ubicación" 
+        <div class="input-group">
+            <div class="input-wrapper">
+                <div class="input-icon" style="width: 16px; height: 16px; background: var(--primary); border-radius: 50%;"></div>
+                <input type="text" id="origin" placeholder="Tu ubicación actual" 
                     onfocus="showOriginSuggestions()" 
                     oninput="searchOrigin(this.value)">
-                <div id="origin-suggestions" class="suggestions-box"></div>
             </div>
-            
-            <div class="input-row">
-                <div class="w-4 h-4 bg-red-600 rounded flex-shrink-0"></div>
+            <div id="origin-suggestions" class="suggestions-box"></div>
+        </div>
+        
+        <div class="input-group">
+            <div class="input-wrapper">
+                <div class="input-icon" style="width: 16px; height: 16px; background: var(--danger); border-radius: 4px;"></div>
                 <input type="text" id="destination" placeholder="¿A dónde vas?" 
                     onfocus="showDestinationSuggestions()" 
                     oninput="searchDestination(this.value)">
-                <div id="dest-suggestions" class="suggestions-box"></div>
             </div>
-            
-            <button onclick="calculateRoute()" 
-                class="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 text-white py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] flex items-center justify-center gap-2">
-                <i data-lucide="navigation" class="w-5 h-5"></i>
-                Buscar Ruta Segura
-            </button>
+            <div id="dest-suggestions" class="suggestions-box"></div>
         </div>
+        
+        <button onclick="calculateRoute()" class="btn btn-primary btn-full">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+            </svg>
+            Buscar Ruta Segura
+        </button>
     </div>
 
-    <!-- Menú de opciones -->
-    <div id="app-menu" class="fixed top-20 right-4 w-64 bg-white rounded-2xl shadow-2xl z-[2000] hidden overflow-hidden">
-        <div onclick="showProfile()" class="px-5 py-4 hover:bg-gray-50 cursor-pointer flex items-center text-sm border-b transition-colors">
-            <i data-lucide="user" class="w-5 h-5 mr-3 text-blue-600"></i>
-            <span class="font-semibold text-gray-900">Mi Perfil</span>
-        </div>
-        <div onclick="openReportModal()" class="px-5 py-4 hover:bg-gray-50 cursor-pointer flex items-center text-sm border-b transition-colors">
-            <i data-lucide="alert-triangle" class="w-5 h-5 mr-3 text-red-600"></i>
-            <span class="font-semibold text-gray-900">Reportar Incidente</span>
-        </div>
-        <div onclick="toggle3DMode()" class="px-5 py-4 hover:bg-gray-50 cursor-pointer flex items-center text-sm border-b transition-colors">
-            <i data-lucide="box" class="w-5 h-5 mr-3 text-purple-600"></i>
-            <span class="font-semibold text-gray-900">Modo 3D</span>
-        </div>
-        <div onclick="viewReports()" class="px-5 py-4 hover:bg-gray-50 cursor-pointer flex items-center text-sm transition-colors">
-            <i data-lucide="map-pin" class="w-5 h-5 mr-3 text-orange-600"></i>
-            <span class="font-semibold text-gray-900">Ver Reportes</span>
-        </div>
-    </div>
+    <!-- ==================== BOTONES FLOTANTES (FAB) ==================== -->
+    <button class="fab fab-search" onclick="toggleSearchBox()" title="Buscar ruta">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+    </button>
+    
+    <button class="fab fab-3d" onclick="toggle3DMode()" title="Modo 3D">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+        </svg>
+    </button>
+    
+    <button class="fab fab-location" onclick="centerOnUser()" title="Mi ubicación">
+        <svg fill="none" stroke="var(--primary)" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
+    </button>
+    
+    <button class="fab fab-report" onclick="openReportModal()" title="Reportar incidente">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+        </svg>
+    </button>
+    
+    <button class="fab fab-menu" onclick="toggleMainMenu()" title="Menú">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+    </button>
 
-    <!-- FABs (Floating Action Buttons) -->
-    <div class="fab fab-report" onclick="openReportModal()" title="Reportar incidente">
-        <i data-lucide="alert-triangle" class="w-7 h-7"></i>
-    </div>
-    <div class="fab fab-3d" onclick="toggle3DMode()" title="Modo 3D">
-        <i data-lucide="box" class="w-6 h-6 text-gray-700"></i>
-    </div>
-    <div class="fab fab-loc" onclick="centerOnUser()" title="Mi ubicación">
-        <i data-lucide="navigation" class="w-6 h-6 text-blue-600"></i>
-    </div>
-
-    <!-- Bottom Sheet de resultados -->
+    <!-- ==================== BOTTOM SHEET DE RESULTADOS ==================== -->
     <div id="bottom-sheet" class="bottom-sheet">
-        <div class="w-14 h-1.5 bg-gray-300 rounded-full mx-auto my-5 cursor-pointer" onclick="closeBottomSheet()"></div>
-        <div class="p-7">
+        <div class="bottom-sheet-handle"></div>
+        
+        <div class="p-6">
             <div class="flex justify-between items-center mb-6">
                 <div>
-                    <h2 class="text-3xl font-black text-gray-900" id="route-time">-- min</h2>
-                    <p class="text-sm text-gray-600 flex items-center mt-2 font-medium">
-                        <i data-lucide="map" class="w-4 h-4 mr-2"></i>
-                        <span id="route-distance">-- km</span>
+                    <h2 id="route-time" style="font-size: 36px; font-weight: 900; color: var(--dark);">-- min</h2>
+                    <p style="font-size: 15px; color: var(--gray); margin-top: 4px; display: flex; align-items: center; gap: 8px;">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                        </svg>
+                        <span id="route-distance" style="font-weight: 600;">-- km</span>
                     </p>
                 </div>
-                <span id="risk-badge" class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wide">--</span>
+                <span id="risk-badge" class="badge">--</span>
             </div>
             
-            <div id="transport-list" class="space-y-3 mb-6"></div>
+            <div id="transport-list" style="margin-bottom: 24px;"></div>
             
-            <button onclick="startTrip()" 
-                class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-5 rounded-xl font-black shadow-lg text-lg hover:shadow-xl transition-all hover:scale-[1.02] flex items-center justify-center gap-3">
-                <i data-lucide="play-circle" class="w-6 h-6"></i>
+            <button onclick="startTrip()" class="btn btn-success btn-full btn-lg">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
                 Iniciar Viaje Seguro
             </button>
         </div>
     </div>
-    <script>
-        // ========== CONFIGURACIÓN ==========
-        const API_URL = 'https://zeta-2.onrender.com/api';
-        const GOOGLE_PLACES_PROXY = 'https://places.googleapis.com/v1/places:searchNearby';
-        
-        let map, routeLayer, userMarker, userLocationWatch;
-        const CENTER = [28.6353, -106.0886]; // Centro de Chihuahua
-        let currentUser = null;
-        let userCoords = null;
-        let selectedRiskLevel = 'low';
-        let currentRouteData = null;
-        let reportPhotoBase64 = '';
-        let profilePhotoBase64 = '';
-        let is3DMode = false;
-        let searchTimeout = null;
-        let selectedOriginCoords = null;
-        let selectedDestCoords = null;
-        let placesCache = {};
 
-        // ========== INICIALIZACIÓN ==========
-        window.onload = function() {
-            checkUserSession();
-            lucide.createIcons();
-        };
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+</body>
+</html>
+<script>
+// ==================== CONFIGURACIÓN GLOBAL ====================
+const CONFIG = {
+    API_URL: 'http://localhost:5002/api',  // Cambiar en producción
+    MAP_CENTER: [28.6353, -106.0886],
+    MAP_ZOOM: 13,
+    GEOLOCATION_OPTIONS: {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 5000
+    }
+};
 
-        function checkUserSession() {
-            const savedUser = localStorage.getItem('zeta_user');
-            const termsAccepted = localStorage.getItem('zeta_terms_accepted');
-            
-            if (!termsAccepted) {
-                document.getElementById('terms-modal').style.display = 'flex';
-            } else if (!savedUser) {
-                document.getElementById('terms-modal').style.display = 'none';
-                document.getElementById('register-modal').classList.remove('hidden');
-                document.getElementById('register-modal').style.display = 'flex';
-            } else {
-                currentUser = JSON.parse(savedUser);
-                startApp();
-            }
-        }
+// ==================== VARIABLES GLOBALES ====================
+let map, routeLayer, userMarker, userLocationWatch;
+let currentUser = null;
+let userCoords = null;
+let selectedSeverity = 'low';
+let selectedCategory = 'security';
+let currentRouteData = null;
+let reportPhotos = [];
+let profilePhotoBase64 = '';
+let is3DMode = false;
+let searchTimeout = null;
+let selectedOriginCoords = null;
+let selectedDestCoords = null;
+let searchBoxVisible = true;
 
-        function acceptTerms() {
-            localStorage.setItem('zeta_terms_accepted', 'true');
-            document.getElementById('terms-modal').style.display = 'none';
-            document.getElementById('register-modal').classList.remove('hidden');
-            document.getElementById('register-modal').style.display = 'flex';
-        }
+// ==================== INICIALIZACIÓN ====================
+window.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Inicializando Zeta Pro...');
+    checkUserSession();
+});
 
-        function previewProfilePic(event) {
-            const file = event.target.files[0];
-            if (file) {
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('La imagen es muy grande. Máximo 5MB.');
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    profilePhotoBase64 = e.target.result;
-                    document.getElementById('profile-preview').innerHTML = 
-                        `<img src="${profilePhotoBase64}" class="w-full h-full object-cover rounded-full">`;
-                };
-                reader.readAsDataURL(file);
-            }
-        }
+function checkUserSession() {
+    const savedUser = localStorage.getItem('zeta_pro_user');
+    const termsAccepted = localStorage.getItem('zeta_pro_terms');
+    
+    if (!termsAccepted) {
+        document.getElementById('terms-modal').style.display = 'flex';
+    } else if (!savedUser) {
+        document.getElementById('terms-modal').style.display = 'none';
+        document.getElementById('register-modal').classList.remove('hidden');
+        document.getElementById('register-modal').style.display = 'flex';
+    } else {
+        currentUser = JSON.parse(savedUser);
+        console.log('✅ Usuario cargado:', currentUser.name);
+        startApp();
+    }
+}
 
-        async function registerUser() {
-            const name = document.getElementById('reg-name').value.trim();
-            const email = document.getElementById('reg-email').value.trim();
+function acceptTerms() {
+    localStorage.setItem('zeta_pro_terms', 'accepted');
+    document.getElementById('terms-modal').style.display = 'none';
+    document.getElementById('register-modal').classList.remove('hidden');
+    document.getElementById('register-modal').style.display = 'flex';
+}
+
+function skipRegistration() {
+    const guestUser = {
+        id: 'guest_' + Date.now(),
+        name: 'Invitado',
+        email: 'guest@zetapro.com',
+        photo: ''
+    };
+    currentUser = guestUser;
+    localStorage.setItem('zeta_pro_user', JSON.stringify(guestUser));
+    document.getElementById('register-modal').style.display = 'none';
+    startApp();
+}
+
+// ==================== INICIAR APP ====================
+function startApp() {
+    console.log('🗺️ Iniciando mapa...');
+    document.getElementById('search-box').style.display = 'block';
+    initMap();
+    requestUserLocation();
+    loadPlaces();
+    loadReports();
+    console.log('✅ App iniciada correctamente');
+}
+
+// ==================== INICIALIZAR MAPA ====================
+function initMap() {
+    map = L.map('map', {
+        zoomControl: false,
+        attributionControl: true
+    }).setView(CONFIG.MAP_CENTER, CONFIG.MAP_ZOOM);
+    
+    // Usar mapa base moderno
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '©OpenStreetMap ©CartoDB',
+        maxZoom: 19,
+        subdomains: 'abcd'
+    }).addTo(map);
+    
+    // Agregar control de zoom personalizado
+    L.control.zoom({
+        position: 'bottomleft'
+    }).addTo(map);
+    
+    console.log('✅ Mapa inicializado');
+}
+
+// ==================== GEOLOCALIZACIÓN ====================
+function requestUserLocation() {
+    if (!('geolocation' in navigator)) {
+        console.error('❌ Geolocalización no disponible');
+        alert('Tu navegador no soporta geolocalización');
+        return;
+    }
+    
+    showLoading('Obteniendo ubicación...');
+    
+    navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            userCoords = {
+                lat: position.coords.latitude,
+                lon: position.coords.longitude,
+                accuracy: position.coords.accuracy
+            };
             
-            if (!name || name.length < 2) {
-                alert('Por favor ingresa tu nombre completo');
-                return;
-            }
+            console.log('📍 Ubicación obtenida:', userCoords);
+            hideLoading();
             
-            if (!email || !email.includes('@') || !email.includes('.')) {
-                alert('Por favor ingresa un email válido');
-                return;
-            }
-            
-            showLoading('Registrando...');
-            
+            // Geocodificación inversa
             try {
-                const response = await fetch(`${API_URL}/auth/register`, {
+                const response = await fetch(`${CONFIG.API_URL}/geocode/reverse`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        name: name,
-                        email: email,
-                        photo: profilePhotoBase64,
-                        accepted_terms: true
-                    })
+                    body: JSON.stringify(userCoords)
                 });
                 
                 const data = await response.json();
-                hideLoading();
-                
                 if (data.status === 'success') {
-                    currentUser = data.user;
-                    localStorage.setItem('zeta_user', JSON.stringify(currentUser));
-                    document.getElementById('register-modal').style.display = 'none';
-                    startApp();
-                } else {
-                    alert(data.message || 'Error al registrar. Intenta nuevamente.');
+                    document.getElementById('origin').value = data.address;
+                    document.getElementById('origin').placeholder = data.address;
                 }
             } catch (error) {
-                hideLoading();
-                console.error('Error:', error);
-                alert('Error de conexión. Verifica tu internet y vuelve a intentar.');
+                console.error('Error en geocodificación inversa:', error);
+                document.getElementById('origin').value = 'Mi ubicación';
             }
-        }
-
-        function skipRegistration() {
-            const guestId = 'guest_' + Date.now();
-            currentUser = {
-                id: guestId,
-                name: 'Invitado',
-                email: 'guest@zeta.app',
-                photo: ''
-            };
-            localStorage.setItem('zeta_user', JSON.stringify(currentUser));
-            document.getElementById('register-modal').style.display = 'none';
-            startApp();
-        }
-
-        function startApp() {
-            document.getElementById('search-box').classList.remove('hidden');
-            initMap();
-            requestUserLocation();
-            loadReports();
-            loadPlaces();
-        }
-
-        // ========== INICIALIZAR MAPA ==========
-        async function initMap() {
-            map = L.map('map', { 
-                zoomControl: false,
-                attributionControl: false
-            }).setView(CENTER, 13);
             
-            // Mapa base moderno
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                maxZoom: 19,
-                attribution: '©OpenStreetMap ©CartoDB'
-            }).addTo(map);
+            updateUserMarker();
+            map.setView([userCoords.lat, userCoords.lon], 15);
             
-            // Control de zoom personalizado
-            L.control.zoom({
-                position: 'bottomleft'
-            }).addTo(map);
-            
-            // Cargar zonas de riesgo
-            loadRiskZones();
-        }
-
-        async function loadRiskZones() {
-            try {
-                const response = await fetch(`${API_URL}/zones`);
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    data.zones.forEach(zone => {
-                        const circle = L.circle([zone.lat, zone.lon], {
-                            color: zone.color,
-                            fillColor: zone.color,
-                            fillOpacity: 0.2,
-                            radius: zone.radius_km * 1000,
-                            weight: 2
-                        }).addTo(map);
-                        
-                        const icons = {
-                            'critical': '🚨',
-                            'high': '⚠️',
-                            'medium': '⚡',
-                            'low': '✅'
-                        };
-                        
-                        circle.bindPopup(`
-                            <div class="p-4">
-                                <div class="text-2xl mb-2">${icons[zone.level]}</div>
-                                <h3 class="font-black text-lg text-gray-900">${zone.name}</h3>
-                                <p class="text-sm text-gray-600 mt-1">Nivel de riesgo: <span class="font-bold">${zone.level}</span></p>
-                                <p class="text-xs text-gray-500 mt-2">Radio: ${zone.radius_km} km</p>
-                            </div>
-                        `);
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading zones:', error);
-            }
-        }
-
-        async function loadPlaces() {
-            try {
-                const response = await fetch(`${API_URL}/points`);
-                const places = await response.json();
-                
-                places.forEach(place => {
-                    const icons = {
-                        'Turismo': '🏛️',
-                        'Cultura': '🎨',
-                        'Recreación': '🌳',
-                        'Compras': '🛍️',
-                        'Educación': '🎓',
-                        'Salud': '🏥',
-                        'Restaurante': '🍽️',
-                        'Hotel': '🏨'
+            // Actualización continua
+            userLocationWatch = navigator.geolocation.watchPosition(
+                (pos) => {
+                    userCoords = {
+                        lat: pos.coords.latitude,
+                        lon: pos.coords.longitude,
+                        accuracy: pos.coords.accuracy
                     };
-                    
-                    const icon = L.divIcon({
-                        className: 'custom-icon',
-                        html: `<div style="font-size: 28px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">${icons[place.type] || '📍'}</div>`,
-                        iconSize: [32, 32],
-                        iconAnchor: [16, 16]
-                    });
-                    
-                    const marker = L.marker([place.coords[0], place.coords[1]], { icon: icon }).addTo(map);
-                    
-                    marker.on('click', () => showPlaceDetails(place));
-                });
-            } catch (error) {
-                console.error('Error loading places:', error);
+                    updateUserMarker();
+                },
+                (error) => console.error('Watch error:', error),
+                CONFIG.GEOLOCATION_OPTIONS
+            );
+        },
+        (error) => {
+            hideLoading();
+            console.error('❌ Error de geolocalización:', error);
+            
+            let errorMsg = 'No se pudo obtener tu ubicación. ';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMsg += 'Por favor permite el acceso a tu ubicación en la configuración del navegador.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMsg += 'La ubicación no está disponible en este momento.';
+                    break;
+                case error.TIMEOUT:
+                    errorMsg += 'La solicitud tardó demasiado. Intenta nuevamente.';
+                    break;
+                default:
+                    errorMsg += 'Error desconocido.';
             }
-        }
+            
+            alert(errorMsg);
+            document.getElementById('origin').value = 'Centro, Chihuahua';
+            userCoords = { lat: CONFIG.MAP_CENTER[0], lon: CONFIG.MAP_CENTER[1] };
+        },
+        CONFIG.GEOLOCATION_OPTIONS
+    );
+}
 
-        // ========== MOSTRAR DETALLES DEL LUGAR (CON FOTOS Y RESEÑAS ESTILO GOOGLE MAPS) ==========
-        async function showPlaceDetails(place) {
-            const popup = L.popup({
-                maxWidth: 320,
-                className: 'custom-popup'
-            });
-            
-            // Generar estrellas
-            const stars = '⭐'.repeat(Math.floor(place.rating || 4));
-            
-            // Simular fotos del lugar (en producción usarías Google Places API)
-            const photoUrls = await fetchPlacePhotos(place);
-            
-            const photosHTML = photoUrls.length > 0 ? `
-                <div class="place-gallery">
-                    ${photoUrls.map(url => `<img src="${url}" onclick="viewFullImage('${url}')" alt="${place.name}">`).join('')}
+function updateUserMarker() {
+    if (!userCoords || !map) return;
+    
+    if (userMarker) {
+        map.removeLayer(userMarker);
+    }
+    
+    // Crear marcador estilo Life360
+    const photoUrl = currentUser?.photo || 
+        'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="50" fill="%233b82f6"/%3E%3Ctext x="50" y="70" font-size="60" text-anchor="middle" fill="white"%3E👤%3C/text%3E%3C/svg%3E';
+    
+    const markerIcon = L.divIcon({
+        className: 'user-marker-container',
+        html: `
+            <div class="pulse-ring"></div>
+            <div class="user-marker" style="background-image: url('${photoUrl}')"></div>
+        `,
+        iconSize: [64, 64],
+        iconAnchor: [32, 32]
+    });
+    
+    userMarker = L.marker([userCoords.lat, userCoords.lon], { icon: markerIcon })
+        .addTo(map)
+        .bindPopup(`
+            <div style="padding: 16px; text-align: center; min-width: 200px;">
+                <div style="width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 50%; overflow: hidden; border: 4px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                    <img src="${photoUrl}" alt="${currentUser?.name}" style="width: 100%; height: 100%; object-fit: cover;">
                 </div>
-            ` : '';
-            
-            // Obtener reseñas simuladas (en producción usarías Google Places API)
-            const reviews = getPlaceReviews(place.name);
-            
-            const reviewsHTML = reviews.length > 0 ? `
-                <div class="mt-3">
-                    <h4 class="font-bold text-sm text-gray-900 mb-2">Reseñas recientes</h4>
-                    ${reviews.map(review => `
-                        <div class="review-item">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="font-semibold text-sm text-gray-900">${review.author}</span>
-                                <span class="stars text-xs">${'⭐'.repeat(review.rating)}</span>
-                            </div>
-                            <p class="text-xs text-gray-600">${review.text}</p>
-                        </div>
-                    `).join('')}
-                </div>
-            ` : '';
-            
-            popup.setLatLng([place.coords[0], place.coords[1]])
-                .setContent(`
-                    <div class="p-4">
-                        <div class="flex items-start justify-between mb-3">
-                            <div>
-                                <h3 class="font-black text-lg text-gray-900">${place.name}</h3>
-                                <p class="text-sm text-gray-600">${place.type}</p>
-                            </div>
-                            <div class="text-right">
-                                <div class="stars">${stars}</div>
-                                <p class="text-xs text-gray-500">${place.rating || 4.0}</p>
-                            </div>
-                        </div>
-                        
-                        ${photosHTML}
-                        ${reviewsHTML}
-                        
-                        <button onclick="setDestinationFromMap('${place.name}', [${place.coords}])" 
-                            class="w-full bg-blue-600 text-white px-4 py-3 rounded-xl text-sm font-bold mt-4 hover:bg-blue-700 transition-all shadow-lg">
-                            <i data-lucide="navigation" class="w-4 h-4 inline mr-2"></i>
-                            Ir a este lugar
-                        </button>
-                    </div>
-                `)
-                .openOn(map);
-            
-            lucide.createIcons();
-        }
+                <p style="font-weight: 800; font-size: 18px; color: var(--dark); margin-bottom: 4px;">${currentUser?.name || 'Tú'}</p>
+                <p style="font-size: 13px; color: var(--gray);">Tu ubicación actual</p>
+                <p style="font-size: 12px; color: var(--primary); margin-top: 8px;">
+                    📍 Precisión: ${Math.round(userCoords.accuracy || 0)}m
+                </p>
+            </div>
+        `);
+}
 
-        // Obtener fotos del lugar (simulado - en producción usar Google Places API)
-        async function fetchPlacePhotos(place) {
-            // Aquí irían las llamadas reales a Google Places API
-            // Por ahora retornamos placeholders realistas
-            const placePhotos = {
-                'Catedral de Chihuahua': [
-                    'https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=300',
-                    'https://images.unsplash.com/photo-1605106251963-ceb583fc26c0?w=300',
-                    'https://images.unsplash.com/photo-1552755626-e820b5d95031?w=300'
-                ],
-                'Quinta Gameros': [
-                    'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=300',
-                    'https://images.unsplash.com/photo-1577495508048-b635879837f1?w=300',
-                    'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=300'
-                ]
+function centerOnUser() {
+    if (userCoords) {
+        map.flyTo([userCoords.lat, userCoords.lon], 17, {
+            duration: 1.5,
+            easeLinearity: 0.25
+        });
+        
+        setTimeout(() => {
+            if (userMarker) userMarker.openPopup();
+        }, 1600);
+    } else {
+        requestUserLocation();
+    }
+}
+
+// ==================== REGISTRO DE USUARIO ====================
+function previewProfilePic(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+        alert('La imagen es muy grande. Máximo 5MB.');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        profilePhotoBase64 = e.target.result;
+        document.getElementById('profile-preview').innerHTML = 
+            `<img src="${profilePhotoBase64}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+    };
+    reader.readAsDataURL(file);
+}
+
+async function registerUser() {
+    const name = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const phone = document.getElementById('reg-phone').value.trim();
+    
+    // Validaciones
+    if (!name || name.length < 2) {
+        alert('Por favor ingresa tu nombre completo');
+        return;
+    }
+    
+    if (!email || !email.includes('@') || !email.includes('.')) {
+        alert('Por favor ingresa un email válido');
+        return;
+    }
+    
+    showLoading('Registrando usuario...');
+    
+    try {
+        const response = await fetch(`${CONFIG.API_URL}/auth/register`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                name: name,
+                email: email,
+                phone: phone,
+                photo: profilePhotoBase64
+            })
+        });
+        
+        const data = await response.json();
+        hideLoading();
+        
+        if (data.status === 'success') {
+            currentUser = data.user;
+            localStorage.setItem('zeta_pro_user', JSON.stringify(currentUser));
+            document.getElementById('register-modal').style.display = 'none';
+            console.log('✅ Usuario registrado:', currentUser);
+            startApp();
+        } else {
+            alert(data.message || 'Error al registrar. Intenta nuevamente.');
+        }
+    } catch (error) {
+        hideLoading();
+        console.error('Error de registro:', error);
+        alert('Error de conexión. Verifica que el backend esté corriendo en ' + CONFIG.API_URL);
+    }
+}
+
+// ==================== UTILIDADES ====================
+function showLoading(message = 'Cargando...') {
+    const existingOverlay = document.getElementById('loading-overlay');
+    if (existingOverlay) return;
+    
+    const overlay = document.createElement('div');
+    overlay.id = 'loading-overlay';
+    overlay.className = 'loading-overlay';
+    overlay.innerHTML = `
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <span class="loading-text">${message}</span>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.remove();
+    }
+}
+
+function toggleSearchBox() {
+    searchBoxVisible = !searchBoxVisible;
+    const searchBox = document.getElementById('search-box');
+    searchBox.classList.toggle('collapsed');
+}
+
+function toggle3DMode() {
+    is3DMode = !is3DMode;
+    document.body.classList.toggle('map-3d-mode');
+    
+    if (is3DMode) {
+        map.setZoom(17);
+        setTimeout(() => map.invalidateSize(), 1000);
+    } else {
+        map.setZoom(13);
+        setTimeout(() => map.invalidateSize(), 1000);
+    }
+}
+
+// Cerrar sugerencias al hacer clic fuera
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.input-wrapper')) {
+        document.querySelectorAll('.suggestions-box').forEach(box => {
+            box.classList.remove('show');
+        });
+    }
+});
+
+// Limpiar watch al cerrar
+window.addEventListener('beforeunload', function() {
+    if (userLocationWatch) {
+        navigator.geolocation.clearWatch(userLocationWatch);
+    }
+});
+
+// ==================== CARGAR LUGARES Y ZONAS ====================
+async function loadPlaces() {
+    try {
+        const response = await fetch(`${CONFIG.API_URL}/places/search?q=`);
+        const places = await response.json();
+        
+        places.forEach(place => {
+            const icons = {
+                'Turismo': '🏛️', 'Cultura': '🎨', 'Recreación': '🌳',
+                'Compras': '🛍️', 'Educación': '🎓', 'Salud': '🏥',
+                'Restaurante': '🍽️', 'Hotel': '🏨', 'Centro Comercial': '🏬',
+                'Museo/Cultura': '🖼️'
             };
-            
-            return placePhotos[place.name] || [
-                'https://images.unsplash.com/photo-1555899434-94d1526a7882?w=300'
-            ];
-        }
-
-        // Obtener reseñas del lugar
-        function getPlaceReviews(placeName) {
-            const reviewsDB = {
-                'Catedral de Chihuahua': [
-                    { author: 'María G.', rating: 5, text: 'Hermosa arquitectura, vale la pena visitarla.' },
-                    { author: 'Carlos M.', rating: 4, text: 'Muy bonito lugar histórico en el centro.' }
-                ],
-                'Fashion Mall': [
-                    { author: 'Ana L.', rating: 5, text: 'Excelente centro comercial, muy completo.' },
-                    { author: 'José R.', rating: 4, text: 'Buena variedad de tiendas y restaurantes.' }
-                ],
-                'Quinta Gameros': [
-                    { author: 'Roberto S.', rating: 5, text: 'Una joya arquitectónica de Chihuahua.' },
-                    { author: 'Laura P.', rating: 5, text: 'Impresionante museo, muy bien conservado.' }
-                ]
-            };
-            
-            return reviewsDB[placeName] || [
-                { author: 'Usuario', rating: 4, text: 'Buen lugar para visitar.' }
-            ];
-        }
-
-        function viewFullImage(url) {
-            window.open(url, '_blank');
-        }
-        // ========== GEOLOCALIZACIÓN PRECISA ==========
-        function requestUserLocation() {
-            if ("geolocation" in navigator) {
-                showLoading('Obteniendo ubicación...');
-                
-                navigator.geolocation.getCurrentPosition(
-                    async (position) => {
-                        userCoords = {
-                            lat: position.coords.latitude,
-                            lon: position.coords.longitude,
-                            accuracy: position.coords.accuracy
-                        };
-                        
-                        hideLoading();
-                        
-                        // Geocodificación inversa
-                        try {
-                            const response = await fetch(`${API_URL}/reverse_geocode`, {
-                                method: 'POST',
-                                headers: {'Content-Type': 'application/json'},
-                                body: JSON.stringify(userCoords)
-                            });
-                            
-                            const data = await response.json();
-                            if (data.status === 'success') {
-                                document.getElementById('origin').value = data.address;
-                                document.getElementById('origin').placeholder = data.address;
-                            }
-                        } catch (error) {
-                            console.error('Reverse geocoding error:', error);
-                            document.getElementById('origin').value = "Mi ubicación";
-                        }
-                        
-                        updateUserMarker();
-                        map.setView([userCoords.lat, userCoords.lon], 15);
-                    },
-                    (error) => {
-                        hideLoading();
-                        console.error("Geolocalización error:", error);
-                        
-                        let errorMsg = 'No se pudo obtener tu ubicación. ';
-                        switch(error.code) {
-                            case error.PERMISSION_DENIED:
-                                errorMsg += 'Por favor permite el acceso a tu ubicación.';
-                                break;
-                            case error.POSITION_UNAVAILABLE:
-                                errorMsg += 'La ubicación no está disponible.';
-                                break;
-                            case error.TIMEOUT:
-                                errorMsg += 'La solicitud expiró. Intenta nuevamente.';
-                                break;
-                        }
-                        
-                        alert(errorMsg);
-                        document.getElementById('origin').value = "Centro, Chihuahua";
-                        userCoords = { lat: CENTER[0], lon: CENTER[1] };
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0
-                    }
-                );
-                
-                // Actualización continua de ubicación
-                userLocationWatch = navigator.geolocation.watchPosition(
-                    (position) => {
-                        userCoords = {
-                            lat: position.coords.latitude,
-                            lon: position.coords.longitude,
-                            accuracy: position.coords.accuracy
-                        };
-                        updateUserMarker();
-                    },
-                    null,
-                    {
-                        enableHighAccuracy: true,
-                        maximumAge: 5000,
-                        timeout: 5000
-                    }
-                );
-            } else {
-                alert('Tu navegador no soporta geolocalización.');
-                document.getElementById('origin').value = "Centro, Chihuahua";
-            }
-        }
-
-        function updateUserMarker() {
-            if (!userCoords || !map) return;
-            
-            if (userMarker) {
-                map.removeLayer(userMarker);
-            }
-            
-            // Crear marcador estilo Life360 con foto de usuario
-            const photoUrl = currentUser?.photo || 
-                'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="50" fill="%233b82f6"/%3E%3Ctext x="50" y="70" font-size="60" text-anchor="middle" fill="white"%3E👤%3C/text%3E%3C/svg%3E';
             
             const icon = L.divIcon({
-                className: 'user-marker-container',
-                html: `
-                    <div class="pulse-ring"></div>
-                    <div class="user-marker" style="background-image: url('${photoUrl}')"></div>
-                `,
-                iconSize: [56, 56],
-                iconAnchor: [28, 28]
+                className: 'custom-icon',
+                html: `<div style="font-size: 32px; text-shadow: 0 3px 8px rgba(0,0,0,0.4); cursor: pointer;">${icons[place.type] || '📍'}</div>`,
+                iconSize: [36, 36],
+                iconAnchor: [18, 18]
             });
             
-            userMarker = L.marker([userCoords.lat, userCoords.lon], { icon: icon })
-                .addTo(map)
-                .bindPopup(`
-                    <div class="p-4 text-center">
-                        <div class="w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden border-4 border-white shadow-lg">
-                            <img src="${photoUrl}" alt="${currentUser?.name}" class="w-full h-full object-cover">
+            const marker = L.marker([place.coords[0], place.coords[1]], { icon: icon }).addTo(map);
+            marker.on('click', () => showPlaceDetails(place));
+        });
+        
+        console.log(`✅ ${places.length} lugares cargados`);
+    } catch (error) {
+        console.error('Error cargando lugares:', error);
+    }
+}
+
+async function showPlaceDetails(place) {
+    const stars = '⭐'.repeat(Math.floor(place.rating || 4));
+    const halfStar = (place.rating % 1 >= 0.5) ? '⭐' : '';
+    
+    // Obtener detalles completos
+    let placeDetails = place;
+    try {
+        const response = await fetch(`${CONFIG.API_URL}/places/${place.id}`);
+        const data = await response.json();
+        if (data.status === 'success') {
+            placeDetails = data.place;
+        }
+    } catch (error) {
+        console.error('Error obteniendo detalles:', error);
+    }
+    
+    // Fotos (simuladas por ahora)
+    const photos = getPlacePhotos(place.name);
+    const photosHTML = photos.length > 0 ? `
+        <div class="place-gallery">
+            ${photos.map(url => `<img src="${url}" onclick="window.open('${url}', '_blank')" alt="${place.name}">`).join('')}
+        </div>
+    ` : '';
+    
+    // Reseñas
+    const reviews = placeDetails.reviews || [];
+    const reviewsHTML = reviews.length > 0 ? `
+        <div style="margin-top: 16px;">
+            <h4 style="font-weight: 700; font-size: 15px; color: var(--dark); margin-bottom: 12px;">
+                Reseñas (${reviews.length})
+            </h4>
+            ${reviews.slice(0, 3).map(review => `
+                <div class="review-item">
+                    <div class="review-header">
+                        <div class="review-author">
+                            <img src="${review.user_photo || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="50" fill="%23cbd5e1"/%3E%3C/svg%3E'}" 
+                                 class="review-avatar" alt="${review.user_name}">
+                            <span class="review-author-name">${review.user_name || 'Usuario'}</span>
                         </div>
-                        <p class="font-black text-lg text-gray-900">${currentUser?.name || 'Tú'}</p>
-                        <p class="text-xs text-gray-500 mt-1">Tu ubicación actual</p>
-                        <p class="text-xs text-blue-600 mt-2">Precisión: ${Math.round(userCoords.accuracy || 0)}m</p>
+                        <div class="review-stars">${'⭐'.repeat(review.rating)}</div>
                     </div>
-                `);
-        }
-
-        function centerOnUser() {
-            if (userCoords) {
-                map.flyTo([userCoords.lat, userCoords.lon], 17, {
-                    duration: 1.5,
-                    easeLinearity: 0.25
-                });
-                if (userMarker) {
-                    setTimeout(() => userMarker.openPopup(), 1600);
-                }
-            } else {
-                requestUserLocation();
-            }
-        }
-
-        // ========== BÚSQUEDA DE LUGARES ==========
-        function showOriginSuggestions() {
-            const box = document.getElementById('origin-suggestions');
-            box.innerHTML = `
-                <div class="p-3 bg-gradient-to-r from-blue-50 to-purple-50 border-b">
-                    <p class="text-xs font-black text-blue-700 uppercase">Tu ubicación</p>
+                    <p class="review-text">${review.comment}</p>
                 </div>
-                <div class="suggestion-item" onclick="useCurrentLocation()">
-                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <i data-lucide="navigation" class="w-5 h-5 text-blue-600"></i>
+            `).join('')}
+            ${reviews.length > 3 ? `<p style="text-align: center; margin-top: 12px;"><a href="#" onclick="showAllReviews('${place.id}')" style="color: var(--primary); font-weight: 600; font-size: 14px;">Ver todas las reseñas</a></p>` : ''}
+        </div>
+    ` : '';
+    
+    const popup = L.popup({
+        maxWidth: 360,
+        className: 'custom-popup'
+    }).setLatLng([place.coords[0], place.coords[1]])
+        .setContent(`
+            <div style="padding: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                    <div style="flex: 1;">
+                        <h3 style="font-weight: 900; font-size: 20px; color: var(--dark); margin-bottom: 4px;">
+                            ${place.name}
+                        </h3>
+                        <p style="font-size: 14px; color: var(--gray);">${place.type}</p>
                     </div>
-                    <div class="flex-1">
-                        <p class="text-sm font-bold text-gray-900">Usar ubicación actual</p>
-                        <p class="text-xs text-gray-500">GPS de alta precisión</p>
+                    <div style="text-align: right;">
+                        <div class="rating-stars" style="font-size: 18px;">${stars}${halfStar}</div>
+                        <p style="font-size: 13px; color: var(--gray); margin-top: 4px;">
+                            ${place.rating || 4.0} (${place.total_reviews || 0})
+                        </p>
                     </div>
                 </div>
-            `;
-            box.classList.add('show');
-            lucide.createIcons();
-        }
-
-        async function showDestinationSuggestions() {
-            const box = document.getElementById('dest-suggestions');
-            box.innerHTML = '<div class="p-4 text-center"><div class="loading-spinner mx-auto"></div></div>';
-            box.classList.add('show');
-            
-            try {
-                const response = await fetch(`${API_URL}/points`);
-                const places = await response.json();
-                const popular = places.slice(0, 10);
                 
-                box.innerHTML = `
-                    <div class="p-3 bg-gradient-to-r from-purple-50 to-pink-50 border-b">
-                        <p class="text-xs font-black text-purple-700 uppercase">Lugares Populares</p>
+                ${place.address ? `
+                    <p style="font-size: 14px; color: var(--gray); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                        <span>📍</span> ${place.address}
+                    </p>
+                ` : ''}
+                
+                ${place.phone ? `
+                    <p style="font-size: 14px; color: var(--gray); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                        <span>📞</span> ${place.phone}
+                    </p>
+                ` : ''}
+                
+                ${place.description ? `
+                    <p style="font-size: 14px; color: var(--dark); margin-top: 12px; line-height: 1.6;">
+                        ${place.description}
+                    </p>
+                ` : ''}
+                
+                ${photosHTML}
+                ${reviewsHTML}
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px;">
+                    <button onclick="setDestinationFromMap('${place.name}', [${place.coords}])" 
+                        class="btn btn-primary" style="padding: 12px;">
+                        🧭 Ir aquí
+                    </button>
+                    <button onclick="openReviewModal('${place.id}')" 
+                        class="btn btn-secondary" style="padding: 12px;">
+                        ⭐ Reseñar
+                    </button>
+                </div>
+            </div>
+        `)
+        .openOn(map);
+}
+
+function getPlacePhotos(placeName) {
+    const photosDB = {
+        'Catedral Metropolitana de Chihuahua': [
+            'https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=400',
+            'https://images.unsplash.com/photo-1605106251963-ceb583fc26c0?w=400',
+            'https://images.unsplash.com/photo-1552755626-e820b5d95031?w=400'
+        ],
+        'Quinta Gameros - Museo Regional': [
+            'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=400',
+            'https://images.unsplash.com/photo-1577495508048-b635879837f1?w=400',
+            'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400'
+        ],
+        'Fashion Mall': [
+            'https://images.unsplash.com/photo-1519567241046-7f570eee3ce2?w=400',
+            'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=400'
+        ]
+    };
+    return photosDB[placeName] || ['https://images.unsplash.com/photo-1555899434-94d1526a7882?w=400'];
+}
+
+// ==================== BÚSQUEDA DE LUGARES ====================
+function showOriginSuggestions() {
+    const box = document.getElementById('origin-suggestions');
+    box.innerHTML = `
+        <div style="padding: 12px 20px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-bottom: 1px solid #e2e8f0;">
+            <p style="font-size: 12px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;">
+                Tu ubicación
+            </p>
+        </div>
+        <div class="suggestion-item" onclick="useCurrentLocation()">
+            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <span style="font-size: 24px;">📍</span>
+            </div>
+            <div class="suggestion-content">
+                <p class="suggestion-name">Usar ubicación actual</p>
+                <p class="suggestion-meta">GPS de alta precisión</p>
+            </div>
+        </div>
+    `;
+    box.classList.add('show');
+}
+
+async function showDestinationSuggestions() {
+    const box = document.getElementById('dest-suggestions');
+    box.innerHTML = '<div style="padding: 20px; text-align: center;"><div class="loading-spinner" style="margin: 0 auto;"></div></div>';
+    box.classList.add('show');
+    
+    try {
+        const response = await fetch(`${CONFIG.API_URL}/places/search?q=&type=`);
+        const places = await response.json();
+        const popular = places.slice(0, 12);
+        
+        box.innerHTML = `
+            <div style="padding: 12px 20px; background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border-bottom: 1px solid #e2e8f0;">
+                <p style="font-size: 12px; font-weight: 700; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.5px;">
+                    Lugares Populares
+                </p>
+            </div>
+            ${popular.map(p => `
+                <div class="suggestion-item" onclick='selectDestinationWithCoords(${JSON.stringify(p)})'>
+                    <div class="suggestion-icon">${getPlaceIcon(p.type)}</div>
+                    <div class="suggestion-content">
+                        <p class="suggestion-name">${p.name}</p>
+                        <p class="suggestion-meta">
+                            ${p.type}
+                            ${p.rating ? `<span class="rating-stars">⭐ ${p.rating}</span>` : ''}
+                        </p>
                     </div>
-                    ${popular.map(p => `
-                        <div class="suggestion-item" onclick='selectDestinationWithCoords(${JSON.stringify(p)})'>
-                            <div class="text-3xl">${getPlaceIcon(p.type)}</div>
-                            <div class="flex-1">
-                                <p class="text-sm font-bold text-gray-900">${p.name}</p>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <p class="text-xs text-gray-500">${p.type}</p>
-                                    <span class="text-xs text-yellow-600">⭐ ${p.rating || 4.5}</span>
-                                </div>
+                </div>
+            `).join('')}
+        `;
+    } catch (error) {
+        console.error('Error:', error);
+        box.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--danger);">Error al cargar lugares</div>';
+    }
+}
+
+async function searchOrigin(query) {
+    if (query.length < 3) {
+        showOriginSuggestions();
+        return;
+    }
+    
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(async () => {
+        const box = document.getElementById('origin-suggestions');
+        box.innerHTML = '<div style="padding: 20px; text-align: center;"><div class="loading-spinner" style="margin: 0 auto;"></div></div>';
+        box.classList.add('show');
+        
+        try {
+            const response = await fetch(`${CONFIG.API_URL}/places/search?q=${encodeURIComponent(query)}`);
+            const suggestions = await response.json();
+            
+            if (suggestions.length === 0) {
+                box.innerHTML = `
+                    <div style="padding: 32px; text-align: center;">
+                        <p style="font-size: 15px; color: var(--gray); margin-bottom: 8px;">
+                            No se encontraron resultados para "<strong>${query}</strong>"
+                        </p>
+                        <p style="font-size: 13px; color: var(--gray);">
+                            Intenta con: calle, colonia o nombre del lugar
+                        </p>
+                    </div>
+                `;
+            } else {
+                box.innerHTML = `
+                    <div style="padding: 12px 20px; background: #eff6ff; border-bottom: 1px solid #e2e8f0;">
+                        <p style="font-size: 12px; font-weight: 700; color: var(--primary); text-transform: uppercase;">
+                            🔍 ${suggestions.length} resultado${suggestions.length > 1 ? 's' : ''}
+                        </p>
+                    </div>
+                    ${suggestions.map(s => `
+                        <div class="suggestion-item" onclick='selectOriginWithCoords(${JSON.stringify(s)})'>
+                            <div class="suggestion-icon">${getPlaceIcon(s.type)}</div>
+                            <div class="suggestion-content">
+                                <p class="suggestion-name">${s.name}</p>
+                                <p class="suggestion-meta">
+                                    ${s.type} ${s.source === 'osm' ? '• OpenStreetMap' : ''}
+                                </p>
                             </div>
                         </div>
                     `).join('')}
                 `;
-            } catch (error) {
-                box.innerHTML = '<div class="p-4 text-center text-sm text-red-600">Error al cargar lugares</div>';
             }
+        } catch (error) {
+            console.error('Error:', error);
+            box.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--danger);">Error de conexión</div>';
         }
+    }, 600);
+}
 
-        async function searchOrigin(val) {
-            if (val.length < 3) {
-                showOriginSuggestions();
-                return;
-            }
+async function searchDestination(query) {
+    if (query.length < 3) {
+        showDestinationSuggestions();
+        return;
+    }
+    
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(async () => {
+        const box = document.getElementById('dest-suggestions');
+        box.innerHTML = '<div style="padding: 20px; text-align: center;"><div class="loading-spinner" style="margin: 0 auto;"></div></div>';
+        box.classList.add('show');
+        
+        try {
+            const lat = userCoords?.lat;
+            const lon = userCoords?.lon;
+            const url = lat && lon 
+                ? `${CONFIG.API_URL}/places/search?q=${encodeURIComponent(query)}&lat=${lat}&lon=${lon}&radius=15`
+                : `${CONFIG.API_URL}/places/search?q=${encodeURIComponent(query)}`;
             
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(async () => {
-                const box = document.getElementById('origin-suggestions');
-                box.innerHTML = '<div class="p-4 text-center"><div class="loading-spinner mx-auto"></div></div>';
-                box.classList.add('show');
-                
-                try {
-                    const response = await fetch(`${API_URL}/search_places?q=${encodeURIComponent(val)}`);
-                    const suggestions = await response.json();
-                    
-                    if (suggestions.length === 0) {
-                        box.innerHTML = `
-                            <div class="p-5 text-center">
-                                <p class="text-sm text-gray-600 mb-2">No se encontraron resultados para "<strong>${val}</strong>"</p>
-                                <p class="text-xs text-gray-400">Intenta con: nombre de calle, colonia o lugar conocido</p>
-                            </div>
-                        `;
-                    } else {
-                        box.innerHTML = `
-                            <div class="p-3 bg-blue-50 border-b flex items-center gap-2">
-                                <span class="text-xl">🔍</span>
-                                <p class="text-xs font-black text-blue-700 uppercase">${suggestions.length} resultado${suggestions.length > 1 ? 's' : ''}</p>
-                            </div>
-                            ${suggestions.map(s => `
-                                <div class="suggestion-item" onclick='selectOriginWithCoords(${JSON.stringify(s)})'>
-                                    <div class="text-2xl">${getIconForType(s.type)}</div>
-                                    <div class="flex-1">
-                                        <p class="text-sm font-bold text-gray-900">${s.name}</p>
-                                        <p class="text-xs text-gray-500">${s.type}${s.source === 'osm' ? ' • OpenStreetMap' : ''}</p>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        `;
-                    }
-                    box.classList.add('show');
-                } catch (error) {
-                    console.error('Search error:', error);
-                    box.innerHTML = '<div class="p-4 text-center text-sm text-red-600">Error de conexión</div>';
-                }
-            }, 600);
-        }
-
-        async function searchDestination(val) {
-            if (val.length < 3) {
-                showDestinationSuggestions();
-                return;
-            }
+            const response = await fetch(url);
+            const suggestions = await response.json();
             
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(async () => {
-                const box = document.getElementById('dest-suggestions');
-                box.innerHTML = '<div class="p-4 text-center"><div class="loading-spinner mx-auto"></div></div>';
-                box.classList.add('show');
-                
-                try {
-                    const response = await fetch(`${API_URL}/search_places?q=${encodeURIComponent(val)}`);
-                    const suggestions = await response.json();
-                    
-                    if (suggestions.length === 0) {
-                        box.innerHTML = `
-                            <div class="p-5 text-center">
-                                <p class="text-sm text-gray-600 mb-2">No se encontraron resultados para "<strong>${val}</strong>"</p>
-                                <p class="text-xs text-gray-400">Ejemplos: "Fashion Mall", "Catedral", "UACH"</p>
-                            </div>
-                        `;
-                    } else {
-                        box.innerHTML = `
-                            <div class="p-3 bg-purple-50 border-b flex items-center gap-2">
-                                <span class="text-xl">🔍</span>
-                                <p class="text-xs font-black text-purple-700 uppercase">${suggestions.length} resultado${suggestions.length > 1 ? 's' : ''}</p>
-                            </div>
-                            ${suggestions.map(s => `
-                                <div class="suggestion-item" onclick='selectDestinationWithCoords(${JSON.stringify(s)})'>
-                                    <div class="text-2xl">${getIconForType(s.type)}</div>
-                                    <div class="flex-1">
-                                        <p class="text-sm font-bold text-gray-900">${s.name}</p>
-                                        <div class="flex items-center gap-2 mt-1">
-                                            <p class="text-xs text-gray-500">${s.type}</p>
-                                            ${s.rating ? `<span class="text-xs text-yellow-600">⭐ ${s.rating}</span>` : ''}
-                                        </div>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        `;
-                    }
-                    box.classList.add('show');
-                } catch (error) {
-                    console.error('Search error:', error);
-                    box.innerHTML = '<div class="p-4 text-center text-sm text-red-600">Error de conexión</div>';
-                }
-            }, 600);
-        }
-
-        function getPlaceIcon(type) {
-            const icons = {
-                'Turismo': '🏛️', 'Cultura': '🎨', 'Recreación': '🌳',
-                'Compras': '🛍️', 'Educación': '🎓', 'Salud': '🏥',
-                'Restaurante': '🍽️', 'Hotel': '🏨', 'Transporte': '🚌',
-                'Gobierno': '🏛️', 'Servicios': '🏦', 'Comercial': '🏢'
-            };
-            return icons[type] || '📍';
-        }
-
-        function getIconForType(type) {
-            const icons = {
-                'Calle': '🛣️', 'Colonia': '🏘️', 'Dirección': '📍',
-                ...getPlaceIcon(type)
-            };
-            return icons[type] || '📍';
-        }
-
-        function selectOriginWithCoords(place) {
-            document.getElementById('origin').value = place.name;
-            selectedOriginCoords = place.coords;
-            document.getElementById('origin-suggestions').classList.remove('show');
-            
-            if (map && place.coords) {
-                map.flyTo(place.coords, 16, { duration: 1.2 });
-                const tempMarker = L.marker(place.coords, {
-                    icon: L.divIcon({
-                        className: 'custom-icon',
-                        html: '<div style="font-size: 32px;">📍</div>',
-                        iconSize: [32, 32]
-                    })
-                }).addTo(map);
-                
-                setTimeout(() => map.removeLayer(tempMarker), 3000);
-            }
-        }
-
-        function selectDestinationWithCoords(place) {
-            document.getElementById('destination').value = place.name;
-            selectedDestCoords = place.coords;
-            document.getElementById('dest-suggestions').classList.remove('show');
-            
-            if (map && place.coords) {
-                map.flyTo(place.coords, 16, { duration: 1.2 });
-                const tempMarker = L.marker(place.coords, {
-                    icon: L.divIcon({
-                        className: 'custom-icon',
-                        html: '<div style="font-size: 32px;">🎯</div>',
-                        iconSize: [32, 32]
-                    })
-                }).addTo(map);
-                
-                setTimeout(() => map.removeLayer(tempMarker), 3000);
-            }
-        }
-
-        function useCurrentLocation() {
-            if (userCoords) {
-                document.getElementById('origin').value = "Mi ubicación";
-                selectedOriginCoords = [userCoords.lat, userCoords.lon];
-                document.getElementById('origin-suggestions').classList.remove('show');
-                centerOnUser();
-            } else {
-                requestUserLocation();
-            }
-        }
-
-        function setDestinationFromMap(name, coords) {
-            document.getElementById('destination').value = name;
-            selectedDestCoords = coords;
-            map.closePopup();
-        }
-        // ========== CÁLCULO DE RUTAS ==========
-        async function calculateRoute() {
-            let origin = document.getElementById('origin').value.trim();
-            let destination = document.getElementById('destination').value.trim();
-            
-            if (!destination) {
-                alert('Por favor ingresa un destino');
-                return;
-            }
-            
-            // Usar coordenadas si están seleccionadas
-            if (selectedOriginCoords) {
-                origin = `${selectedOriginCoords[0]},${selectedOriginCoords[1]}`;
-            } else if (origin === "Mi ubicación" && userCoords) {
-                origin = `${userCoords.lat},${userCoords.lon}`;
-            }
-            
-            if (selectedDestCoords) {
-                destination = `${selectedDestCoords[0]},${selectedDestCoords[1]}`;
-            }
-            
-            showLoading('Calculando ruta segura...');
-            
-            try {
-                const response = await fetch(`${API_URL}/analyze_route`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ origin, destination })
-                });
-                
-                const data = await response.json();
-                hideLoading();
-                
-                if (data.status === 'success') {
-                    currentRouteData = data;
-                    displayRoute(data);
-                    displayRouteResults(data);
-                } else {
-                    alert(data.message || 'No se pudo calcular la ruta');
-                }
-            } catch (error) {
-                hideLoading();
-                console.error('Route error:', error);
-                alert('Error al calcular ruta. Verifica tu conexión.');
-            }
-        }
-
-        function displayRoute(data) {
-            // Limpiar ruta anterior
-            if (routeLayer) {
-                map.removeLayer(routeLayer);
-            }
-            
-            // Dibujar nueva ruta
-            const riskColors = {
-                'Bajo': '#10b981',
-                'Medio': '#f59e0b',
-                'Alto': '#ef4444',
-                'Crítico': '#dc2626'
-            };
-            
-            routeLayer = L.geoJSON(data.route_geometry, {
-                style: {
-                    color: riskColors[data.risk_level] || '#000',
-                    weight: 6,
-                    opacity: 0.8,
-                    lineJoin: 'round',
-                    lineCap: 'round'
-                }
-            }).addTo(map);
-            
-            // Ajustar vista al recorrido
-            map.fitBounds(routeLayer.getBounds(), {
-                padding: [100, 400],
-                duration: 1.5
-            });
-            
-            // Marcadores de inicio y fin
-            L.marker([data.origin.lat, data.origin.lon], {
-                icon: L.divIcon({
-                    className: 'custom-icon',
-                    html: '<div style="font-size: 36px;">🚩</div>',
-                    iconSize: [36, 36]
-                })
-            }).addTo(map).bindPopup('<strong>Origen</strong>');
-            
-            L.marker([data.destination.lat, data.destination.lon], {
-                icon: L.divIcon({
-                    className: 'custom-icon',
-                    html: '<div style="font-size: 36px;">🏁</div>',
-                    iconSize: [36, 36]
-                })
-            }).addTo(map).bindPopup('<strong>Destino</strong>');
-        }
-
-        function displayRouteResults(data) {
-            document.getElementById('bottom-sheet').classList.add('active');
-            
-            const transportHTML = data.transport_options.map((opt, i) => `
-                <div class="transport-option ${i === 0 ? 'selected' : ''}" onclick="selectTransport(this, '${opt.time}')">
-                    <div class="flex items-center flex-1">
-                        <div class="w-14 h-14 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mr-4 text-3xl shadow-sm">
-                            ${opt.icon}
-                        </div>
-                        <div>
-                            <p class="font-black text-gray-900 text-base">${opt.mode}</p>
-                            <p class="text-sm text-gray-600">${opt.description}</p>
-                        </div>
+            if (suggestions.length === 0) {
+                box.innerHTML = `
+                    <div style="padding: 32px; text-align: center;">
+                        <p style="font-size: 15px; color: var(--gray); margin-bottom: 8px;">
+                            No se encontraron resultados para "<strong>${query}</strong>"
+                        </p>
+                        <p style="font-size: 13px; color: var(--gray);">
+                            Ejemplos: "Fashion Mall", "Catedral", "Museo Casa Villa"
+                        </p>
                     </div>
-                    <div class="text-right">
-                        <p class="font-black text-xl text-gray-900">${opt.time}</p>
-                        <p class="text-xs text-gray-500">${opt.risk}</p>
+                `;
+            } else {
+                box.innerHTML = `
+                    <div style="padding: 12px 20px; background: #faf5ff; border-bottom: 1px solid #e2e8f0;">
+                        <p style="font-size: 12px; font-weight: 700; color: var(--secondary); text-transform: uppercase;">
+                            🔍 ${suggestions.length} resultado${suggestions.length > 1 ? 's' : ''}
+                        </p>
+                    </div>
+                    ${suggestions.map(s => `
+                        <div class="suggestion-item" onclick='selectDestinationWithCoords(${JSON.stringify(s)})'>
+                            <div class="suggestion-icon">${getPlaceIcon(s.type)}</div>
+                            <div class="suggestion-content">
+                                <p class="suggestion-name">${s.name}</p>
+                                <p class="suggestion-meta">
+                                    ${s.type}
+                                    ${s.rating ? `<span class="rating-stars">⭐ ${s.rating}</span>` : ''}
+                                    ${s.distance_km ? `<span>• ${s.distance_km} km</span>` : ''}
+                                </p>
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            box.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--danger);">Error de conexión</div>';
+        }
+    }, 600);
+}
+
+function getPlaceIcon(type) {
+    const icons = {
+        'Turismo': '🏛️', 'Cultura': '🎨', 'Recreación': '🌳',
+        'Compras': '🛍️', 'Educación': '🎓', 'Salud': '🏥',
+        'Restaurante': '🍽️', 'Hotel': '🏨', 'Transporte': '🚌',
+        'Gobierno': '🏛️', 'Servicios': '🏦', 'Comercial': '🏢',
+        'Centro Comercial': '🏬', 'Museo/Cultura': '🖼️',
+        'Calle': '🛣️', 'Colonia': '🏘️', 'Dirección': '📍'
+    };
+    return icons[type] || '📍';
+}
+
+function useCurrentLocation() {
+    if (userCoords) {
+        document.getElementById('origin').value = 'Mi ubicación';
+        selectedOriginCoords = [userCoords.lat, userCoords.lon];
+        document.getElementById('origin-suggestions').classList.remove('show');
+        centerOnUser();
+    } else {
+        requestUserLocation();
+    }
+}
+
+function selectOriginWithCoords(place) {
+    document.getElementById('origin').value = place.name;
+    selectedOriginCoords = place.coords;
+    document.getElementById('origin-suggestions').classList.remove('show');
+    
+    if (map && place.coords) {
+        map.flyTo(place.coords, 16, { duration: 1.2 });
+    }
+}
+
+function selectDestinationWithCoords(place) {
+    document.getElementById('destination').value = place.name;
+    selectedDestCoords = place.coords;
+    document.getElementById('dest-suggestions').classList.remove('show');
+    
+    if (map && place.coords) {
+        map.flyTo(place.coords, 16, { duration: 1.2 });
+    }
+}
+
+function setDestinationFromMap(name, coords) {
+    document.getElementById('destination').value = name;
+    selectedDestCoords = coords;
+    map.closePopup();
+    
+    // Auto-calcular ruta
+    setTimeout(() => {
+        calculateRoute();
+    }, 500);
+}
+
+// ==================== CÁLCULO DE RUTAS ====================
+async function calculateRoute() {
+    let origin = document.getElementById('origin').value.trim();
+    let destination = document.getElementById('destination').value.trim();
+    
+    if (!destination) {
+        alert('Por favor ingresa un destino');
+        return;
+    }
+    
+    // Usar coordenadas seleccionadas
+    if (selectedOriginCoords) {
+        origin = `${selectedOriginCoords[0]},${selectedOriginCoords[1]}`;
+    } else if (userCoords) {
+        origin = `${userCoords.lat},${userCoords.lon}`;
+    }
+    
+    if (selectedDestCoords) {
+        destination = `${selectedDestCoords[0]},${selectedDestCoords[1]}`;
+    }
+    
+    showLoading('Calculando ruta segura...');
+    
+    try {
+        const response = await fetch(`${CONFIG.API_URL}/routes/calculate`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ origin, destination, avoid_risks: true })
+        });
+        
+        const data = await response.json();
+        hideLoading();
+        
+        if (data.status === 'success') {
+            currentRouteData = data;
+            displayRoute(data);
+            displayRouteResults(data);
+            
+            // Ocultar barra de búsqueda
+            toggleSearchBox();
+        } else {
+            alert(data.message || 'No se pudo calcular la ruta');
+        }
+    } catch (error) {
+        hideLoading();
+        console.error('Error:', error);
+        alert('Error al calcular ruta. Verifica tu conexión.');
+    }
+}
+
+function displayRoute(data) {
+    if (routeLayer) {
+        map.removeLayer(routeLayer);
+    }
+    
+    const riskColors = {
+        'Bajo': '#10b981',
+        'Medio': '#f59e0b',
+        'Alto': '#ef4444',
+        'Crítico': '#dc2626'
+    };
+    
+    routeLayer = L.geoJSON(data.route_geometry, {
+        style: {
+            color: riskColors[data.risk_level] || '#3b82f6',
+            weight: 6,
+            opacity: 0.8,
+            lineJoin: 'round',
+            lineCap: 'round'
+        }
+    }).addTo(map);
+    
+    map.fitBounds(routeLayer.getBounds(), {
+        padding: [80, 400],
+        duration: 1.5
+    });
+    
+    // Marcadores de inicio y fin
+    L.marker([data.origin.lat, data.origin.lon], {
+        icon: L.divIcon({
+            className: 'custom-icon',
+            html: '<div style="font-size: 40px;">🚩</div>',
+            iconSize: [40, 40]
+        })
+    }).addTo(map).bindPopup('<strong>Origen</strong>');
+    
+    L.marker([data.destination.lat, data.destination.lon], {
+        icon: L.divIcon({
+            className: 'custom-icon',
+            html: '<div style="font-size: 40px;">🏁</div>',
+            iconSize: [40, 40]
+        })
+    }).addTo(map).bindPopup('<strong>Destino</strong>');
+}
+
+function displayRouteResults(data) {
+    document.getElementById('bottom-sheet').classList.add('active');
+    
+    const transportHTML = data.transport_options.map((opt, i) => `
+        <div class="transport-option ${i === 0 ? 'selected' : ''}" onclick="selectTransport(this, '${opt.time}')">
+            <div style="display: flex; align-items: center; flex: 1;">
+                <div class="transport-icon">${opt.icon}</div>
+                <div class="transport-info">
+                    <div class="transport-name">${opt.mode}</div>
+                    <div class="transport-desc">${opt.description}</div>
+                </div>
+            </div>
+            <div class="transport-time">
+                <div class="transport-time-value">${opt.time}</div>
+                <div class="transport-risk">${opt.risk}</div>
+            </div>
+        </div>
+    `).join('');
+    
+    document.getElementById('transport-list').innerHTML = transportHTML;
+    document.getElementById('route-time').textContent = data.transport_options[0].time;
+    document.getElementById('route-distance').textContent = `${data.distance_km} km`;
+    
+    const badgeClasses = {
+        'Bajo': 'badge-success',
+        'Medio': 'badge-warning',
+        'Alto': 'badge-danger',
+        'Crítico': 'badge-critical'
+    };
+    
+    const badge = document.getElementById('risk-badge');
+    badge.className = `badge ${badgeClasses[data.risk_level]}`;
+    badge.textContent = data.risk_level;
+}
+
+function selectTransport(el, time) {
+    document.querySelectorAll('.transport-option').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('route-time').textContent = time;
+}
+
+function clearRoute() {
+    if (routeLayer) {
+        map.removeLayer(routeLayer);
+    }
+    document.getElementById('origin').value = '';
+    document.getElementById('destination').value = '';
+    selectedOriginCoords = null;
+    selectedDestCoords = null;
+    currentRouteData = null;
+    document.getElementById('bottom-sheet').classList.remove('active');
+}
+
+function startTrip() {
+    if (!currentRouteData) {
+        alert('Primero calcula una ruta');
+        return;
+    }
+    
+    const selected = document.querySelector('.transport-option.selected');
+    const mode = selected ? selected.querySelector('.transport-name').textContent : 'Automóvil';
+    
+    alert(`🚀 ¡Viaje iniciado!\n\n🚗 Modo: ${mode}\n📍 Destino: ${currentRouteData.destination.name}\n⏱️ Tiempo estimado: ${currentRouteData.transport_options[0].time}\n📏 Distancia: ${currentRouteData.distance_km} km\n⚠️ Nivel de riesgo: ${currentRouteData.risk_level}\n\n✅ ¡Mantente alerta y ten un viaje seguro!`);
+    
+    document.getElementById('bottom-sheet').classList.remove('active');
+}
+
+// ==================== REPORTES ====================
+function openReportModal() {
+    document.getElementById('report-modal').classList.remove('hidden');
+    document.getElementById('report-modal').style.display = 'flex';
+}
+
+function closeReportModal() {
+    document.getElementById('report-modal').classList.add('hidden');
+    document.getElementById('report-modal').style.display = 'none';
+    document.getElementById('report-desc').value = '';
+    document.getElementById('report-category').value = 'security';
+    reportPhotos = [];
+    document.getElementById('report-photos-preview').innerHTML = '';
+    document.getElementById('report-photos-preview').classList.add('hidden');
+    
+    // Resetear severidad
+    document.querySelectorAll('.severity-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    selectedSeverity = 'low';
+}
+
+function selectSeverity(severity, element) {
+    selectedSeverity = severity;
+    document.querySelectorAll('.severity-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    element.classList.add('active');
+}
+
+function previewReportPhotos(event) {
+    const files = Array.from(event.target.files).slice(0, 3); // Máximo 3
+    reportPhotos = [];
+    
+    const previewContainer = document.getElementById('report-photos-preview');
+    previewContainer.innerHTML = '';
+    previewContainer.classList.remove('hidden');
+    
+    files.forEach((file, index) => {
+        if (file.size > 5 * 1024 * 1024) {
+            alert(`La imagen ${file.name} es muy grande. Máximo 5MB por foto.`);
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            reportPhotos.push(e.target.result);
+            
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.className = 'photo-preview';
+            img.onclick = () => window.open(e.target.result, '_blank');
+            previewContainer.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+async function submitReport() {
+    const description = document.getElementById('report-desc').value.trim();
+    const category = document.getElementById('report-category').value;
+    
+    if (!description || description.length < 15) {
+        alert('La descripción debe tener al menos 15 caracteres. Sé específico y detallado.');
+        return;
+    }
+    
+    if (description.length > 1000) {
+        alert('La descripción no debe exceder 1000 caracteres.');
+        return;
+    }
+    
+    const location = userCoords || { 
+        lat: map.getCenter().lat, 
+        lon: map.getCenter().lng 
+    };
+    
+    showLoading('Enviando reporte...');
+    
+    try {
+        const response = await fetch(`${CONFIG.API_URL}/reports/submit`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                user_id: currentUser?.id,
+                description: description,
+                category: category,
+                severity: selectedSeverity,
+                lat: location.lat,
+                lon: location.lon,
+                images: reportPhotos
+            })
+        });
+        
+        const data = await response.json();
+        hideLoading();
+        
+        if (data.status === 'success') {
+            alert(`✅ Reporte enviado exitosamente!\n\n📝 ID: ${data.report_id}\n\n${data.requires_review ? '⚠️ Tu reporte será verificado por nuestro equipo en breve.' : '✓ Reporte verificado automáticamente.'}\n\nGracias por contribuir a la seguridad de nuestra comunidad.`);
+            closeReportModal();
+            loadReports();
+        } else {
+            alert('❌ Error: ' + (data.message || 'No se pudo enviar el reporte'));
+        }
+    } catch (error) {
+        hideLoading();
+        console.error('Error:', error);
+        alert('Error al enviar reporte. Verifica tu conexión.');
+    }
+}
+
+async function loadReports() {
+    try {
+        const response = await fetch(`${CONFIG.API_URL}/reports/list?verified=true&days=30`);
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            displayReportsOnMap(data.reports);
+            console.log(`✅ ${data.reports.length} reportes verificados cargados`);
+        }
+    } catch (error) {
+        console.error('Error cargando reportes:', error);
+    }
+}
+
+function displayReportsOnMap(reports) {
+    const colors = {
+        'low': '#10b981',
+        'medium': '#f59e0b',
+        'high': '#ef4444'
+    };
+    
+    const icons = {
+        'low': '⚠️',
+        'medium': '🚨',
+        'high': '🔴'
+    };
+    
+    reports.forEach(report => {
+        const marker = L.circleMarker([report.lat, report.lon], {
+            radius: 12,
+            fillColor: colors[report.severity] || '#6b7280',
+            color: '#fff',
+            weight: 3,
+            fillOpacity: 0.85
+        }).addTo(map);
+        
+        const timeAgo = getTimeAgo(report.created_at);
+        const imagesHTML = report.images && report.images.length > 0 ? `
+            <div style="display: grid; grid-template-columns: repeat(${Math.min(report.images.length, 3)}, 1fr); gap: 8px; margin-top: 12px;">
+                ${report.images.slice(0, 3).map(img => `
+                    <img src="${img}" style="width: 100%; height: 80px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="window.open('${img}', '_blank')">
+                `).join('')}
+            </div>
+        ` : '';
+        
+        marker.bindPopup(`
+            <div style="padding: 16px; max-width: 320px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                    <span style="font-size: 28px;">${icons[report.severity]}</span>
+                    <div>
+                        <h3 style="font-weight: 800; font-size: 16px; color: var(--dark);">Reporte de Incidente</h3>
+                        <p style="font-size: 12px; color: var(--gray);">${report.category} • ${timeAgo}</p>
                     </div>
                 </div>
-            `).join('');
-            
-            document.getElementById('transport-list').innerHTML = transportHTML;
-            document.getElementById('route-time').textContent = data.transport_options[0].time;
-            document.getElementById('route-distance').textContent = `${data.distance_km} km`;
-            
-            const riskColors = {
-                'Bajo': 'bg-green-100 text-green-800 border-2 border-green-300',
-                'Medio': 'bg-yellow-100 text-yellow-800 border-2 border-yellow-300',
-                'Alto': 'bg-red-100 text-red-800 border-2 border-red-300',
-                'Crítico': 'bg-black text-white border-2 border-red-600'
-            };
-            
-            const badge = document.getElementById('risk-badge');
-            badge.className = `px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wide ${riskColors[data.risk_level]}`;
-            badge.textContent = `${data.risk_level}`;
-            
-            lucide.createIcons();
-        }
-
-        function selectTransport(el, time) {
-            document.querySelectorAll('.transport-option').forEach(e => e.classList.remove('selected'));
-            el.classList.add('selected');
-            document.getElementById('route-time').textContent = time;
-        }
-
-        function closeBottomSheet() {
-            document.getElementById('bottom-sheet').classList.remove('active');
-        }
-
-        function startTrip() {
-            if (!currentRouteData) {
-                alert('Primero busca una ruta');
-                return;
-            }
-            
-            const selectedTransport = document.querySelector('.transport-option.selected');
-            const mode = selectedTransport ? selectedTransport.querySelector('.font-black').textContent : 'Automóvil';
-            
-            alert(`🚀 ¡Viaje iniciado!\n\n🚗 Modo: ${mode}\n📍 Destino: ${currentRouteData.destination.name}\n⏱️ Tiempo: ${currentRouteData.transport_options[0].time}\n📏 Distancia: ${currentRouteData.distance_km} km\n⚠️ Riesgo: ${currentRouteData.risk_level}\n\n✅ ¡Mantente alerta y seguro en tu camino!`);
-            
-            closeBottomSheet();
-        }
-
-        // ========== REPORTES ==========
-        function openReportModal() {
-            document.getElementById('app-menu').classList.remove('show');
-            document.getElementById('report-modal').classList.remove('hidden');
-            document.getElementById('report-modal').style.display = 'flex';
-            lucide.createIcons();
-        }
-
-        function closeReportModal() {
-            document.getElementById('report-modal').classList.add('hidden');
-            document.getElementById('report-modal').style.display = 'none';
-            document.getElementById('report-desc').value = '';
-            reportPhotoBase64 = '';
-            document.getElementById('report-photo-preview').classList.add('hidden');
-            document.querySelectorAll('.risk-btn').forEach(b => {
-                b.classList.remove('ring-4', 'ring-offset-2');
-            });
-        }
-
-        function previewReportPhoto(event) {
-            const file = event.target.files[0];
-            if (file) {
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('La imagen es muy grande. Máximo 5MB.');
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    reportPhotoBase64 = e.target.result;
-                    document.getElementById('report-photo-img').src = reportPhotoBase64;
-                    document.getElementById('report-photo-preview').classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function setRiskLevel(level, btn) {
-            selectedRiskLevel = level;
-            document.querySelectorAll('.risk-btn').forEach(b => {
-                b.classList.remove('ring-4', 'ring-offset-2');
-            });
-            const ringColors = {
-                'low': 'ring-green-400',
-                'medium': 'ring-yellow-400',
-                'high': 'ring-red-400'
-            };
-            btn.classList.add('ring-4', 'ring-offset-2', ringColors[level]);
-        }
-
-        async function submitReport() {
-            const description = document.getElementById('report-desc').value.trim();
-            
-            if (!description || description.length < 10) {
-                alert('La descripción debe tener al menos 10 caracteres');
-                return;
-            }
-            
-            const center = userCoords || { lat: map.getCenter().lat, lon: map.getCenter().lng };
-            
-            showLoading('Enviando reporte...');
-            
-            try {
-                const response = await fetch(`${API_URL}/reports/submit`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        user_email: currentUser?.email || 'anonymous',
-                        description: description,
-                        level: selectedRiskLevel,
-                        lat: center.lat,
-                        lon: center.lon,
-                        photo: reportPhotoBase64
-                    })
-                });
                 
-                const data = await response.json();
-                hideLoading();
+                <p style="font-size: 14px; color: var(--dark); line-height: 1.6; margin-bottom: 12px;">
+                    ${report.description}
+                </p>
                 
-                if (data.status === 'success') {
-                    alert('✅ Reporte enviado exitosamente.\n\nGracias por contribuir a la seguridad de nuestra comunidad.');
-                    closeReportModal();
-                    loadReports();
-                } else {
-                    alert('❌ Error: ' + (data.message || 'No se pudo enviar el reporte'));
-                }
-            } catch (error) {
-                hideLoading();
-                console.error('Report error:', error);
-                alert('Error al enviar reporte. Verifica tu conexión.');
-            }
-        }
-
-        async function loadReports() {
-            try {
-                const response = await fetch(`${API_URL}/reports/list`);
-                const data = await response.json();
+                ${report.address ? `
+                    <p style="font-size: 13px; color: var(--gray); margin-bottom: 8px;">
+                        📍 ${report.address}
+                    </p>
+                ` : ''}
                 
-                if (data.status === 'success') {
-                    displayReportsOnMap(data.reports);
-                }
-            } catch (error) {
-                console.error('Error loading reports:', error);
-            }
-        }
-
-        function displayReportsOnMap(reports) {
-            const colors = {
-                'low': '#10b981',
-                'medium': '#f59e0b',
-                'high': '#ef4444'
-            };
-            
-            const icons = {
-                'low': '⚠️',
-                'medium': '🚨',
-                'high': '🔴'
-            };
-            
-            reports.forEach(report => {
-                L.circleMarker([report.lat, report.lon], {
-                    radius: 10,
-                    fillColor: colors[report.level] || '#6b7280',
-                    color: '#fff',
-                    weight: 3,
-                    fillOpacity: 0.85
-                }).addTo(map).bindPopup(`
-                    <div class="p-4 max-w-xs">
-                        <div class="flex items-center gap-2 mb-3">
-                            <span class="text-2xl">${icons[report.level]}</span>
-                            <h3 class="font-black text-base text-gray-900">Reporte de Incidente</h3>
-                        </div>
-                        <p class="text-sm text-gray-700 mb-3">${report.description || report.desc}</p>
-                        ${report.photo ? `<img src="${report.photo}" class="w-full rounded-lg mt-2 shadow-md">` : ''}
-                        <div class="mt-3 pt-3 border-t border-gray-200">
-                            <p class="text-xs text-gray-500">Nivel: <span class="font-bold">${report.level}</span></p>
-                            <p class="text-xs text-gray-400 mt-1">${new Date(report.timestamp || report.time).toLocaleDateString('es-MX')}</p>
-                        </div>
+                ${imagesHTML}
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--light-gray);">
+                    <div style="display: flex; gap: 12px;">
+                        <button onclick="voteReport('${report.id}', 'up')" style="background: none; border: none; cursor: pointer; font-size: 14px;">
+                            👍 ${report.upvotes || 0}
+                        </button>
+                        <button onclick="voteReport('${report.id}', 'down')" style="background: none; border: none; cursor: pointer; font-size: 14px;">
+                            👎 ${report.downvotes || 0}
+                        </button>
                     </div>
-                `);
-            });
-        }
-
-        // ========== UTILIDADES ==========
-        function toggle3DMode() {
-            is3DMode = !is3DMode;
-            document.body.classList.toggle('map-3d-mode');
-            document.getElementById('app-menu').classList.remove('show');
-            
-            if (is3DMode) {
-                map.setZoom(17);
-                setTimeout(() => map.invalidateSize(), 950);
-            } else {
-                map.setZoom(13);
-                setTimeout(() => map.invalidateSize(), 950);
-            }
-        }
-
-        function toggleMenu() {
-            const menu = document.getElementById('app-menu');
-            menu.classList.toggle('show');
-            lucide.createIcons();
-        }
-
-        function showProfile() {
-            toggleMenu();
-            const reportsCount = currentUser?.reports_count || 0;
-            alert(`👤 Perfil de Usuario\n\n📝 Nombre: ${currentUser?.name}\n✉️ Email: ${currentUser?.email}\n📊 Reportes enviados: ${reportsCount}\n\n✅ Gracias por hacer tu comunidad más segura.`);
-        }
-
-        function viewReports() {
-            toggleMenu();
-            alert('📍 Ver reportes de la comunidad\n\nEsta función mostrará todos los reportes activos en el mapa con filtros por nivel de riesgo y fecha.');
-        }
-
-        function showLoading(message = 'Cargando...') {
-            // Implementación simple de loading
-            const existing = document.getElementById('loading-overlay');
-            if (existing) return;
-            
-            const overlay = document.createElement('div');
-            overlay.id = 'loading-overlay';
-            overlay.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm z-[6000] flex items-center justify-center';
-            overlay.innerHTML = `
-                <div class="bg-white p-6 rounded-2xl shadow-2xl flex items-center gap-4">
-                    <div class="loading-spinner"></div>
-                    <span class="font-semibold text-gray-900">${message}</span>
+                    ${report.user_name ? `<p style="font-size: 12px; color: var(--gray);">Por ${report.user_name}</p>` : ''}
                 </div>
-            `;
-            document.body.appendChild(overlay);
-        }
+            </div>
+        `);
+    });
+}
 
-        function hideLoading() {
-            const overlay = document.getElementById('loading-overlay');
-            if (overlay) {
-                overlay.remove();
-            }
-        }
+function getTimeAgo(timestamp) {
+    const now = new Date();
+    const past = new Date(timestamp);
+    const diffMs = now - past;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffMins < 60) return `Hace ${diffMins} min`;
+    if (diffHours < 24) return `Hace ${diffHours} h`;
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+    return past.toLocaleDateString('es-MX');
+}
 
-        // Cerrar dropdowns al hacer clic fuera
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.input-row')) {
-                document.querySelectorAll('.suggestions-box').forEach(b => b.classList.remove('show'));
-            }
-            if (!e.target.closest('#app-menu') && !e.target.closest('button[onclick="toggleMenu()"]')) {
-                document.getElementById('app-menu').classList.remove('show');
-            }
+async function voteReport(reportId, voteType) {
+    if (!currentUser || currentUser.id.startsWith('guest_')) {
+        alert('Debes tener una cuenta para votar en reportes.');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${CONFIG.API_URL}/reports/vote/${reportId}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                user_id: currentUser.id,
+                vote_type: voteType
+            })
         });
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            console.log('Voto registrado');
+            // Recargar reportes para actualizar contadores
+            loadReports();
+        }
+    } catch (error) {
+        console.error('Error votando:', error);
+    }
+}
 
-        // Limpiar al cerrar
-        window.addEventListener('beforeunload', () => {
-            if (userLocationWatch) {
-                navigator.geolocation.clearWatch(userLocationWatch);
-            }
+// ==================== RESEÑAS ====================
+function openReviewModal(placeId) {
+    map.closePopup();
+    
+    if (!currentUser || currentUser.id.startsWith('guest_')) {
+        alert('Debes tener una cuenta para dejar reseñas.');
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'review-modal-temp';
+    modal.innerHTML = `
+        <div class="modal-content" style="background: white; border-radius: 28px; padding: 32px; max-width: 480px; width: 90%;">
+            <div class="flex justify-between items-center mb-6">
+                <h3 style="font-size: 24px; font-weight: 900; color: var(--dark);">Deja tu Reseña</h3>
+                <button onclick="closeReviewModal()" style="background: var(--light-gray); border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer;">✕</button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Calificación</label>
+                <div style="display: flex; gap: 8px; font-size: 32px;">
+                    ${[1,2,3,4,5].map(n => `<span onclick="selectRating(${n})" id="star-${n}" style="cursor: pointer; color: #cbd5e1;">⭐</span>`).join('')}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Tu experiencia</label>
+                <textarea id="review-comment" class="form-textarea" placeholder="Comparte tu experiencia en este lugar..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Fotos (opcional, máx. 3)</label>
+                <input type="file" id="review-photos" accept="image/*" multiple max="3" class="hidden" onchange="previewReviewPhotos(event)">
+                <label for="review-photos" class="photo-upload-area" style="padding: 20px;">
+                    📸 Añadir fotos
+                </label>
+                <div id="review-photos-preview" class="photo-preview-grid hidden"></div>
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="closeReviewModal()" class="btn btn-secondary" style="flex: 1;">Cancelar</button>
+                <button onclick="submitReview('${placeId}')" class="btn btn-primary" style="flex: 2;">Publicar Reseña</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    modal.style.display = 'flex';
+    
+    window.selectedReviewRating = 5;
+    selectRating(5);
+}
+
+function closeReviewModal() {
+    const modal = document.getElementById('review-modal-temp');
+    if (modal) modal.remove();
+}
+
+function selectRating(rating) {
+    window.selectedReviewRating = rating;
+    for (let i = 1; i <= 5; i++) {
+        const star = document.getElementById(`star-${i}`);
+        if (star) {
+            star.style.color = i <= rating ? '#fbbf24' : '#cbd5e1';
+        }
+    }
+}
+
+function previewReviewPhotos(event) {
+    const files = Array.from(event.target.files).slice(0, 3);
+    window.reviewPhotos = [];
+    
+    const previewContainer = document.getElementById('review-photos-preview');
+    previewContainer.innerHTML = '';
+    previewContainer.classList.remove('hidden');
+    
+    files.forEach(file => {
+        if (file.size > 5 * 1024 * 1024) {
+            alert(`La imagen ${file.name} es muy grande. Máximo 5MB.`);
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            window.reviewPhotos.push(e.target.result);
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.className = 'photo-preview';
+            previewContainer.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+async function submitReview(placeId) {
+    const comment = document.getElementById('review-comment').value.trim();
+    const rating = window.selectedReviewRating || 5;
+    
+    if (!comment || comment.length < 10) {
+        alert('Por favor escribe al menos 10 caracteres en tu reseña.');
+        return;
+    }
+    
+    showLoading('Publicando reseña...');
+    
+    try {
+        const response = await fetch(`${CONFIG.API_URL}/places/${placeId}/reviews`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                user_id: currentUser.id,
+                rating: rating,
+                comment: comment,
+                images: window.reviewPhotos || []
+            })
         });
-    </script>
+        
+        const data = await response.json();
+        hideLoading();
+        
+        if (data.status === 'success') {
+            alert(`✅ ¡Reseña publicada!\n\nGracias por compartir tu experiencia.\n\nNueva calificación del lugar: ${data.new_rating} ⭐`);
+            closeReviewModal();
+            loadPlaces(); // Recargar para actualizar
+        } else {
+            alert('Error: ' + (data.message || 'No se pudo publicar la reseña'));
+        }
+    } catch (error) {
+        hideLoading();
+        console.error('Error:', error);
+        alert('Error al publicar reseña. Verifica tu conexión.');
+    }
+}
+
+// ==================== MENÚ PRINCIPAL ====================
+function toggleMainMenu() {
+    const menu = document.createElement('div');
+    menu.id = 'main-menu-temp';
+    menu.className = 'modal-overlay';
+    menu.innerHTML = `
+        <div style="background: white; border-radius: 28px; padding: 0; max-width: 360px; width: 90%; overflow: hidden;">
+            <div style="background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); padding: 32px; text-align: center; color: white;">
+                <div style="width: 80px; height: 80px; margin: 0 auto 16px; border-radius: 50%; overflow: hidden; border: 4px solid white; box-shadow: 0 8px 24px rgba(0,0,0,0.3);">
+                    <img src="${currentUser?.photo || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="50" fill="white"/%3E%3C/svg%3E'}" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <h3 style="font-size: 24px; font-weight: 900; margin-bottom: 4px;">${currentUser?.name || 'Usuario'}</h3>
+                <p style="font-size: 14px; opacity: 0.9;">${currentUser?.email || ''}</p>
+            </div>
+            
+            <div style="padding: 16px;">
+                <div onclick="showUserStats(); closeMainMenu();" style="padding: 16px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: var(--transition);" onmouseover="this.style.background='var(--light-gray)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size: 24px;">📊</span>
+                    <span style="font-weight: 600;">Mis Estadísticas</span>
+                </div>
+                
+                <div onclick="window.open('https://docs.zetapro.com', '_blank'); closeMainMenu();" style="padding: 16px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: var(--transition);" onmouseover="this.style.background='var(--light-gray)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size: 24px;">📖</span>
+                    <span style="font-weight: 600;">Ayuda y Soporte</span>
+                </div>
+                
+                <div onclick="showAbout(); closeMainMenu();" style="padding: 16px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: var(--transition);" onmouseover="this.style.background='var(--light-gray)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size: 24px;">ℹ️</span>
+                    <span style="font-weight: 600;">Acerca de Zeta Pro</span>
+                </div>
+                
+                <div onclick="logout(); closeMainMenu();" style="padding: 16px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: var(--transition); color: var(--danger);" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size: 24px;">🚪</span>
+                    <span style="font-weight: 600;">Cerrar Sesión</span>
+                </div>
+            </div>
+            
+            <div style="padding: 16px; text-align: center; border-top: 1px solid var(--light-gray);">
+                <button onclick="closeMainMenu()" class="btn btn-secondary btn-full">Cerrar</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(menu);
+    menu.style.display = 'flex';
+}
+
+function closeMainMenu() {
+    const menu = document.getElementById('main-menu-temp');
+    if (menu) menu.remove();
+}
+
+function showUserStats() {
+    alert(`📊 Tus Estadísticas\n\n👤 ${currentUser?.name}\n📧 ${currentUser?.email}\n📝 Reportes enviados: ${currentUser?.reports_count || 0}\n⭐ Calificación: ${currentUser?.rating || 5.0}/5\n\n✅ ¡Gracias por hacer tu comunidad más segura!`);
+}
+
+function showAbout() {
+    alert(`ℹ️ Zeta Pro v1.0\n\n🛡️ Sistema Profesional de Navegación Segura\n\n© 2024 Zeta Pro. Todos los derechos reservados.\n\nDesarrollado con ❤️ para hacer de Chihuahua una ciudad más segura.\n\n🌐 www.zetapro.com\n📧 soporte@zetapro.com`);
+}
+
+function logout() {
+    if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+        localStorage.removeItem('zeta_pro_user');
+        location.reload();
+    }
+}
+
+// ==================== INICIALIZACIÓN FINAL ====================
+console.log(`
+╔══════════════════════════════════════╗
+║   ZETA PRO v1.0                      ║
+║   Sistema Profesional de Navegación  ║
+║   Ready to rock! 🚀                  ║
+╚══════════════════════════════════════╝
+`);
+
+</script>
 </body>
 </html>
